@@ -31,6 +31,8 @@
 # Environment & local files
 .env*
 !.env.example
+# La URL pública de la API sí se versiona: el build de Pages debe ser reproducible
+!.env.production
 .DS_Store
 *.pem
 *.local

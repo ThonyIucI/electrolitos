@@ -14,7 +14,9 @@
   // Dominio propio (electrolitos.* sobre gaiamundo.com) — ver planning/CLOUDFLARE_SETUP.md.
   "vars": {
     "BETTER_AUTH_URL": "https://electrolitos-api.gaiamundo.com",
-    "CORS_ORIGIN": "https://electrolitos.gaiamundo.com"
+    // Orígenes permitidos, separados por coma. Se incluye pages.dev porque Cloudflare
+    // Pages publica ahí antes de que el dominio propio quede conectado.
+    "CORS_ORIGIN": "https://electrolitos.gaiamundo.com,https://electrolitos.pages.dev"
   },
 
   // Secrets (BETTER_AUTH_SECRET, SEED_TOKEN) se cargan con `wrangler secret put <NOMBRE>`.

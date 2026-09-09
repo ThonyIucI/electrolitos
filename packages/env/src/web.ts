@@ -1,14 +1,22 @@
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
-/** URL absoluta de la API en prod, o `/` en dev para usar el proxy de Vite (mismo origen). */
-const serverUrlSchema = z.union([z.url(), z.string().regex(/^\/.*$/, "Debe ser una URL o una ruta que empiece con /")]);
+/**
+ * Origen de la API.
+ * - Dev: `/` (valor por defecto) → mismo origen, Vite hace proxy de `/api` al Worker local.
+ * - Prod: URL absoluta del Worker, definida en `apps/web/.env.production`.
+ */
+const serverUrlSchema = z
+  .union([z.url(), z.string().regex(/^\//, "Debe ser una URL absoluta o una ruta que empiece con /")])
+  .default("/");
+
+const viteEnv = (import.meta as ImportMeta & { env: Record<string, string | undefined> }).env;
 
 export const env = createEnv({
   clientPrefix: "VITE_",
   client: {
     VITE_SERVER_URL: serverUrlSchema,
   },
-  runtimeEnv: (import.meta as any).env,
+  runtimeEnv: viteEnv,
   emptyStringAsUndefined: true,
 });
