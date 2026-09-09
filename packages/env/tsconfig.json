@@ -1,0 +1,3 @@
+{
+  "extends": "@electrolitos/config/tsconfig.base.json"
+}

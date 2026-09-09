@@ -1,0 +1,24 @@
+{
+  "name": "@electrolitos/auth",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@electrolitos/db": "workspace:*",
+    "@electrolitos/env": "workspace:*",
+    "better-auth": "catalog:",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@electrolitos/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

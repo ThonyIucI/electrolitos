@@ -1,0 +1,31 @@
+{
+  "name": "electrolitos",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm -r dev",
+    "build": "pnpm -r --if-present build",
+    "check-types": "pnpm -r check-types",
+    "dev:web": "pnpm --filter web dev:bare",
+    "dev:server": "pnpm --filter server dev:bare",
+    "db:generate": "pnpm --filter @electrolitos/db db:generate",
+    "deploy": "pnpm --filter @electrolitos/infra deploy",
+    "destroy": "pnpm --filter @electrolitos/infra destroy"
+  },
+  "dependencies": {
+    "@electrolitos/env": "workspace:*",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "catalog:",
+    "@electrolitos/config": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  },
+  "packageManager": "pnpm@12.3.4"
+}
