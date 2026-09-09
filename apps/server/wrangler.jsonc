@@ -1,0 +1,28 @@
+// Configuración del Worker de la API. Docs: https://developers.cloudflare.com/workers/wrangler/configuration/
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "electrolitos-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  "dev": { "port": 3000 },
+
+  // Variables NO secretas de producción. En local las pisa `.dev.vars`.
+  "vars": {
+    "BETTER_AUTH_URL": "https://electrolitos-api.electrolitos.workers.dev",
+    "CORS_ORIGIN": "https://electrolitos.pages.dev"
+  },
+
+  // Secrets (BETTER_AUTH_SECRET, SEED_TOKEN) se cargan con `wrangler secret put <NOMBRE>`.
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "electrolitos-db",
+      // TODO: reemplazar por el Database ID real del panel de Cloudflare (planning/CLOUDFLARE_SETUP.md paso 3)
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "../../packages/db/src/migrations"
+    }
+  ]
+}

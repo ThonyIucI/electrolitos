@@ -9,6 +9,7 @@
     "start": "vite",
     "check-types": "vite build && tsc --noEmit",
     "generate-pwa-assets": "pwa-assets-generator",
+    "dev": "vite dev",
     "dev:bare": "vite dev"
   },
   "dependencies": {

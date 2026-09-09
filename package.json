@@ -7,14 +7,16 @@
   ],
   "type": "module",
   "scripts": {
-    "dev": "pnpm -r dev",
+    "dev": "pnpm -r --parallel --if-present dev",
+    "dev:web": "pnpm --filter web dev",
+    "dev:server": "pnpm --filter server dev",
     "build": "pnpm -r --if-present build",
     "check-types": "pnpm -r check-types",
-    "dev:web": "pnpm --filter web dev:bare",
-    "dev:server": "pnpm --filter server dev:bare",
+    "test": "pnpm -r --if-present test",
     "db:generate": "pnpm --filter @electrolitos/db db:generate",
-    "deploy": "pnpm --filter @electrolitos/infra deploy",
-    "destroy": "pnpm --filter @electrolitos/infra destroy"
+    "db:migrate:local": "pnpm --filter server db:migrate:local",
+    "db:migrate:remote": "pnpm --filter server db:migrate:remote",
+    "deploy:server": "pnpm --filter server deploy"
   },
   "dependencies": {
     "@electrolitos/env": "workspace:*",

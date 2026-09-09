@@ -1,12 +1,11 @@
 {
   "extends": "@electrolitos/config/tsconfig.base.json",
   "compilerOptions": {
-    "composite": true,
-    "outDir": "dist",
+    "noEmit": true,
     "paths": {
       "@/*": ["./src/*"]
     },
-    "jsx": "react-jsx",
-    "jsxImportSource": "hono/jsx"
-  }
+    "types": ["node", "@cloudflare/workers-types", "@cloudflare/vitest-pool-workers/types"]
+  },
+  "include": ["src", "test", "vitest.config.ts", "../../packages/env/env.d.ts"]
 }

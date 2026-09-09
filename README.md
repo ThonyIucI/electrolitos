@@ -1,118 +1,90 @@
-# electrolitos
+# Electrolitos
 
-This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines React, TanStack Router, Hono, and more.
+App de la academia Amautas: asistencia, XP, casas, medallas y tablero en vivo para el taller
+de electrónica. PWA mobile-first con look de juego.
 
-## Features
+Plan, contrato de API y decisiones: `../planning/` (empezar por `README.md`).
+Configuración de Cloudflare y GitHub: `../planning/CLOUDFLARE_SETUP.md`.
 
-- **TypeScript** - For type safety and improved developer experience
-- **TanStack Router** - File-based routing with full type safety
-- **TailwindCSS** - Utility-first CSS for rapid UI development
-- **Shared UI package** - shadcn/ui primitives live in `packages/ui`
-- **Hono** - Lightweight, performant server framework
-- **workers** - Runtime environment
-- **Drizzle** - TypeScript-first ORM
-- **Cloudflare D1** - Database engine
-- **Authentication** - Better-Auth
-- **PWA** - Progressive Web App support
+## Stack
 
-## Getting Started
+| Parte | Tecnología | Dónde corre |
+|---|---|---|
+| `apps/web` | Vite + React 19 + TanStack Router + Tailwind v4 + shadcn | Cloudflare Pages |
+| `apps/server` | Hono + Drizzle + better-auth | Cloudflare Workers |
+| Base de datos | Cloudflare D1 (SQLite) | Cloudflare |
+| `packages/shared` | Enums, tipos de API y utilidades compartidas back/front | — |
+| `packages/db` | Schema Drizzle + migraciones generadas | — |
+| `packages/auth` | Configuración de better-auth (email para staff, username para alumnos) | — |
+| `packages/ui` | Primitivas shadcn compartidas y `globals.css` (tokens) | — |
 
-First, install the dependencies:
+Requiere **Node 24** (`nvm use 24`) y **pnpm 12**.
+
+## Desarrollo local
+
+Todo corre en tu máquina, sin Cloudflare: la API en wrangler con una D1 local (archivo SQLite
+en `apps/server/.wrangler/state/`) y el front en Vite.
 
 ```bash
+nvm use 24
 pnpm install
+pnpm db:migrate:local      # crea/actualiza la D1 local. Idempotente, corre las que falten
+pnpm dev                   # API http://localhost:3000 · web http://localhost:3001
 ```
 
-## Database Setup
-
-This project uses Cloudflare D1 (SQLite) with Drizzle ORM.
-
-Runtime database access uses the Cloudflare `DB` binding from `packages/infra/alchemy.run.ts`. If a local `DATABASE_URL` is present, it is only for database tooling.
-
-Alchemy provisions the D1 database and applies migrations during `deploy`.
-
-1. Generate migration files:
+Primera vez: copiar `apps/server/.dev.vars.example` → `apps/server/.dev.vars` (ya existe en esta
+máquina) y crear el admin:
 
 ```bash
-pnpm run db:generate
+curl -X POST localhost:3000/api/v1/internal/seed-admin \
+  -H "x-seed-token: seed-local-dev-token" -H "content-type: application/json" \
+  -d '{"email":"admin@electrolitos.local","password":"admin12345","name":"Thony"}'
 ```
 
-Then, run the development server:
+> Ya existe un admin local `admin@electrolitos.local` / `admin12345`. Entrar en
+> http://localhost:3001/login.
+
+### Probar desde el celular (misma red Wi-Fi)
+
+1. Levanta todo con `pnpm dev`. Vite imprime una línea `Network: http://192.168.x.x:3001`.
+   Si no la ves, tu IP sale con `hostname -I`.
+2. En el celular abre `http://<esa-ip>:3001`. Nada más: el front llama a la API por el mismo
+   origen (`/api`) y Vite la reenvía a wrangler, así no hay CORS ni problemas de cookies.
+3. Si no carga, es el firewall del PC: `sudo ufw allow 3001/tcp` (y `3000/tcp` si quieres
+   pegarle a la API directo).
+
+Cómo funciona por dentro: `apps/web/.env` tiene `VITE_SERVER_URL=/` (mismo origen) y
+`apps/web/vite.config.ts` hace proxy de `/api` → `localhost:3000`. En producción la variable
+apunta a la URL del Worker y no hay proxy. Las cookies son `Lax` en HTTP local y
+`None; Secure` en HTTPS de producción (se decide por el esquema de `BETTER_AUTH_URL`).
+
+## Migraciones
+
+1. Editar el schema en `packages/db/src/schema/*.ts`
+2. `pnpm db:generate` → crea el SQL en `packages/db/src/migrations/` (**nunca** escribirlo a mano)
+3. `pnpm db:migrate:local` en desarrollo · `pnpm db:migrate:remote` en producción
+
+## Tests
 
 ```bash
-pnpm run dev
+pnpm --filter server test       # vitest dentro de workerd con D1 en memoria
+pnpm check-types
 ```
 
-Open [http://localhost:3001](http://localhost:3001) in your browser to see the web application.
-The API is running at [http://localhost:3000](http://localhost:3000).
-
-## UI Customization
-
-React web apps in this stack share shadcn/ui primitives through `packages/ui`.
-
-- Change design tokens and global styles in `packages/ui/src/styles/globals.css`
-- Update shared primitives in `packages/ui/src/components/*`
-- Adjust shadcn aliases or style config in `packages/ui/components.json` and `apps/web/components.json`
-
-### Add more shared components
-
-Run this from the project root to add more primitives to the shared UI package:
+## Deploy
 
 ```bash
-npx shadcn@latest add accordion dialog popover sheet table -c packages/ui
+pnpm --filter server exec wrangler secret put BETTER_AUTH_SECRET
+pnpm --filter server exec wrangler secret put SEED_TOKEN
+pnpm db:migrate:remote
+pnpm deploy:server              # → https://electrolitos-api.electrolitos.workers.dev
 ```
 
-Import shared components like this:
+El front se publica solo desde Cloudflare Pages en cada push a `main`
+(build `pnpm --filter web build`, output `apps/web/dist`, var `VITE_SERVER_URL`).
 
-```tsx
-import { Button } from "@electrolitos/ui/components/button";
-```
+## Convenciones
 
-### Add app-specific blocks
-
-If you want to add app-specific blocks instead of shared primitives, run the shadcn CLI from `apps/web`.
-
-## Deployment
-
-### Alchemy
-
-- Target: web on Cloudflare + server on Cloudflare
-- Configure provider login: `cd packages/infra && pnpm exec alchemy login --configure`
-- Dev: pnpm run dev
-- Deploy: pnpm run deploy
-- Destroy: pnpm run destroy
-
-`alchemy login --configure` stores the selected Cloudflare, Neon, PlanetScale, and/or Prisma provider profiles under `~/.alchemy`; no provider-specific setup command is required by this scaffold.
-
-Deploys are staged and default to a personal `dev_<username>` stage. For production, run the deploy with an explicit stage from `packages/infra`:
-
-```bash
-cd packages/infra && pnpm exec alchemy deploy --stage production
-```
-
-### Production origins
-
-- Required after the first deploy: set `CORS_ORIGIN` in `apps/server/.env` to the exact deployed web origin, such as `https://app.example.com`, then deploy the server again.
-
-## Project Structure
-
-```
-electrolitos/
-├── apps/
-│   ├── web/         # Frontend application (React + TanStack Router)
-│   └── server/      # Backend API (Hono)
-├── packages/
-│   ├── ui/          # Shared shadcn/ui components and styles
-│   ├── auth/        # Authentication configuration & logic
-│   └── db/          # Database schema & queries
-```
-
-## Available Scripts
-
-- `pnpm run dev`: Start all applications in development mode
-- `pnpm run build`: Build all applications
-- `pnpm run dev:web`: Start only the web application
-- `pnpm run dev:server`: Start only the server
-- `pnpm run check-types`: Check TypeScript types across all apps
-- `pnpm run db:generate`: Generate database client/types
-- `cd apps/web && pnpm run generate-pwa-assets`: Generate PWA assets
+Ver `../CLAUDE.md`. Resumen: rutas → handler → query Drizzle, sin capas extra; zod en entrada;
+sobre `{ success, data, error }` en salida; `xp_events` append-only; mensajes de error en
+español sin IDs; un componente por archivo; sin barrels.

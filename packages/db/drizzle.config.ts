@@ -1,14 +1,13 @@
-import dotenv from "dotenv";
 import { defineConfig } from "drizzle-kit";
 
-dotenv.config({
-  path: "../../apps/server/.env",
-});
-
+/**
+ * Solo se usa para GENERAR migraciones (`pnpm db:generate`) a partir del schema.
+ * Aplicarlas es tarea de wrangler: `wrangler d1 migrations apply electrolitos-db --local|--remote`
+ * (ver apps/server/package.json). Nunca escribir SQL de migración a mano.
+ */
 export default defineConfig({
   schema: "./src/schema",
   out: "./src/migrations",
-  // DOCS: https://orm.drizzle.team/docs/guides/d1-http-with-drizzle-kit
   dialect: "sqlite",
   driver: "d1-http",
 });

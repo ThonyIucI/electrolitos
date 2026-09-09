@@ -1,41 +1,25 @@
 import { env } from "@electrolitos/env/web";
+import { usernameClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 
-function getServerUrl(url: string) {
-  const processEnv = (
-    globalThis as {
-      process?: { env?: Record<string, string | undefined> };
-    }
-  ).process?.env;
-  if (typeof window === "undefined" && processEnv?.SERVER_URL) {
-    return processEnv.SERVER_URL.endsWith("/")
-      ? processEnv.SERVER_URL.slice(0, -1)
-      : processEnv.SERVER_URL;
+const AUTH_PATH = "/api/auth";
+
+/**
+ * Origen de la API.
+ * - Dev: `VITE_SERVER_URL=/` → mismo origen que el front (Vite hace proxy de /api a wrangler).
+ *   Funciona en localhost y desde el celular por la IP de la red.
+ * - Prod: `VITE_SERVER_URL=https://electrolitos-api.electrolitos.workers.dev`.
+ */
+export const getServerOrigin = (): string => {
+  const configured = env.VITE_SERVER_URL.replace(/\/+$/, "");
+  if (configured.startsWith("http")) {
+    return configured;
   }
+  return `${window.location.origin}${configured}`;
+};
 
-  const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
-
-  if (!normalized.startsWith("/")) {
-    return normalized;
-  }
-
-  if (typeof window !== "undefined") {
-    return `${window.location.origin}${normalized}`;
-  }
-
-  const vercelUrl =
-    processEnv?.VERCEL_ENV === "production"
-      ? (processEnv?.VERCEL_PROJECT_PRODUCTION_URL ?? processEnv?.VERCEL_URL)
-      : (processEnv?.VERCEL_URL ?? processEnv?.VERCEL_PROJECT_PRODUCTION_URL);
-  if (vercelUrl) {
-    const origin = vercelUrl.startsWith("http") ? vercelUrl : `https://${vercelUrl}`;
-    return `${origin}${normalized}`;
-  }
-
-  return `http://localhost:3000${normalized}`;
-}
 export const authClient = createAuthClient({
-  // better-auth derives its route-matching base from this URL's path, so the
-  // public auth path must equal the server-side mount (/api/auth everywhere)
-  baseURL: new URL("/api/auth", getServerUrl(env.VITE_SERVER_URL)).toString(),
+  // better-auth toma la base de rutas del path de esta URL: debe ser /api/auth como en el server
+  baseURL: `${getServerOrigin()}${AUTH_PATH}`,
+  plugins: [usernameClient()],
 });
