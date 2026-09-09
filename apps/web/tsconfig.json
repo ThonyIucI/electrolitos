@@ -11,6 +11,7 @@
     "rootDirs": ["."],
     "paths": {
       "@/*": ["./src/*"],
+      "@electrolitos/shared/*": ["../../packages/shared/src/*"],
       "@electrolitos/ui/*": ["../../packages/ui/src/*"]
     }
   }

@@ -2,7 +2,7 @@ import { env } from "cloudflare:workers";
 
 import app from "../src/index";
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = "http://localhost:3001";
 const JSON_HEADERS = { "content-type": "application/json" };
 
 /** Ejecuta una request contra la app Hono dentro del runtime de Workers. */

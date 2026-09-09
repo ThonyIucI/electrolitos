@@ -2,16 +2,19 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "electrolitos-api",
+  "account_id": "bf8727310476f9ee0c3f768920d7194a",
   "main": "src/index.ts",
   "compatibility_date": "2026-08-01",
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
-  "dev": { "port": 3000 },
+  "preview_urls": false,
+  "dev": { "port": 3001 },
 
   // Variables NO secretas de producción. En local las pisa `.dev.vars`.
+  // Dominio propio (electrolitos.* sobre gaiamundo.com) — ver planning/CLOUDFLARE_SETUP.md.
   "vars": {
-    "BETTER_AUTH_URL": "https://electrolitos-api.electrolitos.workers.dev",
-    "CORS_ORIGIN": "https://electrolitos.pages.dev"
+    "BETTER_AUTH_URL": "https://electrolitos-api.gaiamundo.com",
+    "CORS_ORIGIN": "https://electrolitos.gaiamundo.com"
   },
 
   // Secrets (BETTER_AUTH_SECRET, SEED_TOKEN) se cargan con `wrangler secret put <NOMBRE>`.
@@ -20,8 +23,7 @@
     {
       "binding": "DB",
       "database_name": "electrolitos-db",
-      // TODO: reemplazar por el Database ID real del panel de Cloudflare (planning/CLOUDFLARE_SETUP.md paso 3)
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "ea9c6697-1142-4e75-8884-6942b47c6864",
       "migrations_dir": "../../packages/db/src/migrations"
     }
   ]

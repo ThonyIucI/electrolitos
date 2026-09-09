@@ -4,8 +4,8 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
-const WEB_PORT = 3001;
-const LOCAL_API_URL = "http://localhost:3000";
+const WEB_PORT = 3000;
+const LOCAL_API_URL = "http://localhost:3001";
 const LOCAL_WEB_ORIGIN = `http://localhost:${WEB_PORT}`;
 
 export default defineConfig({

@@ -20,43 +20,74 @@ Configuración de Cloudflare y GitHub: `../planning/CLOUDFLARE_SETUP.md`.
 
 Requiere **Node 24** (`nvm use 24`) y **pnpm 12**.
 
-## Desarrollo local
+---
 
-Todo corre en tu máquina, sin Cloudflare: la API en wrangler con una D1 local (archivo SQLite
-en `apps/server/.wrangler/state/`) y el front en Vite.
+## Local y producción son dos mundos separados
+
+No comparten absolutamente nada. Ni servidor, ni base de datos, ni usuarios.
+
+| | Local | Producción |
+|---|---|---|
+| API | `wrangler dev` en tu PC, `http://localhost:3001` | Worker en Cloudflare, `https://electrolitos-api.gaiamundo.com` |
+| Front | Vite en tu PC, `http://localhost:3000` | Cloudflare Pages |
+| Base de datos | Archivo SQLite en `apps/server/.wrangler/state/` | D1 real en Cloudflare |
+| Secrets | `apps/server/.dev.vars` | `wrangler secret put` |
+| Usuarios | Los que crees en local | Los que crees en producción |
+
+El admin que creas en local **no existe** en producción, y al revés. Trabajar en local
+nunca toca los datos reales, y `pnpm dev` jamás se conecta a Cloudflare.
+
+> **Ojo con el `database_id`.** En producción identifica la base real. En local, miniflare
+> lo usa como nombre del archivo SQLite: si el ID cambia, apunta a una base **nueva y vacía**
+> y hay que volver a correr `pnpm db:migrate:local` y a crear el admin.
+
+---
+
+## Desarrollo local
 
 ```bash
 nvm use 24
 pnpm install
-pnpm db:migrate:local      # crea/actualiza la D1 local. Idempotente, corre las que falten
-pnpm dev                   # API http://localhost:3000 · web http://localhost:3001
+pnpm db:migrate:local      # crea/actualiza las tablas de la base local. Idempotente
+pnpm dev                   # front http://localhost:3000 · API http://localhost:3001
 ```
 
-Primera vez: copiar `apps/server/.dev.vars.example` → `apps/server/.dev.vars` (ya existe en esta
-máquina) y crear el admin:
+`pnpm dev` levanta **los dos** servidores en paralelo. Ctrl+C en esa terminal los mata a
+ambos. Si algún día un proceso queda huérfano y el puerto aparece ocupado:
 
 ```bash
-curl -X POST localhost:3000/api/v1/internal/seed-admin \
+pkill -f "wrangler dev"
+```
+
+Para levantarlos por separado: `pnpm dev:web` y `pnpm dev:server`.
+
+### Crear el admin local
+
+Los secrets locales están en `apps/server/.dev.vars` (copiar de `.dev.vars.example` si no
+existe). Después de migrar, crea tu usuario:
+
+```bash
+curl -X POST localhost:3001/api/v1/internal/seed-admin \
   -H "x-seed-token: seed-local-dev-token" -H "content-type: application/json" \
   -d '{"email":"admin@electrolitos.local","password":"admin12345","name":"Thony"}'
 ```
 
-> Ya existe un admin local `admin@electrolitos.local` / `admin12345`. Entrar en
-> http://localhost:3001/login.
+Luego entra en http://localhost:3000/login con ese correo y contraseña.
 
 ### Probar desde el celular (misma red Wi-Fi)
 
-1. Levanta todo con `pnpm dev`. Vite imprime una línea `Network: http://192.168.x.x:3001`.
+1. Levanta todo con `pnpm dev`. Vite imprime una línea `Network: http://192.168.x.x:3000`.
    Si no la ves, tu IP sale con `hostname -I`.
-2. En el celular abre `http://<esa-ip>:3001`. Nada más: el front llama a la API por el mismo
-   origen (`/api`) y Vite la reenvía a wrangler, así no hay CORS ni problemas de cookies.
-3. Si no carga, es el firewall del PC: `sudo ufw allow 3001/tcp` (y `3000/tcp` si quieres
-   pegarle a la API directo).
+2. En el celular abre `http://<esa-ip>:3000`. Nada más: el front llama a la API por el mismo
+   origen (`/api`) y Vite la reenvía al Worker local, así no hay CORS ni líos de cookies.
+3. Si no carga, es el firewall del PC: `sudo ufw allow 3000/tcp`.
 
 Cómo funciona por dentro: `apps/web/.env` tiene `VITE_SERVER_URL=/` (mismo origen) y
-`apps/web/vite.config.ts` hace proxy de `/api` → `localhost:3000`. En producción la variable
+`apps/web/vite.config.ts` hace proxy de `/api` → `localhost:3001`. En producción la variable
 apunta a la URL del Worker y no hay proxy. Las cookies son `Lax` en HTTP local y
 `None; Secure` en HTTPS de producción (se decide por el esquema de `BETTER_AUTH_URL`).
+
+---
 
 ## Migraciones
 
@@ -73,11 +104,15 @@ pnpm check-types
 
 ## Deploy
 
+Dominio propio: API en `electrolitos-api.gaiamundo.com`, web en `electrolitos.gaiamundo.com`
+(subdominios nuevos sobre el dominio ya comprado, no tocan nada existente de GaIA). Pasos
+completos: `../planning/CLOUDFLARE_SETUP.md`.
+
 ```bash
 pnpm --filter server exec wrangler secret put BETTER_AUTH_SECRET
 pnpm --filter server exec wrangler secret put SEED_TOKEN
 pnpm db:migrate:remote
-pnpm deploy:server              # → https://electrolitos-api.electrolitos.workers.dev
+pnpm deploy:server
 ```
 
 El front se publica solo desde Cloudflare Pages en cada push a `main`

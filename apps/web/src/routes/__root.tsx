@@ -14,11 +14,11 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
   head: () => ({
     meta: [
       {
-        title: "electrolitos",
+        title: "Electrolitos",
       },
       {
         name: "description",
-        content: "electrolitos is a web application",
+        content: "Taller de electrónica de la academia Amautas: misiones, XP y medallas.",
       },
     ],
     links: [

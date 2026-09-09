@@ -237,6 +237,9 @@ importers:
       '@electrolitos/env':
         specifier: workspace:*
         version: link:../../packages/env
+      '@electrolitos/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@electrolitos/ui':
         specifier: workspace:*
         version: link:../../packages/ui

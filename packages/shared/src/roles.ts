@@ -16,3 +16,9 @@ export const userRoleLabels: Record<TUserRole, string> = {
 };
 
 export const isStaffRole = (role: string): boolean => STAFF_ROLES.includes(role as TUserRole);
+
+/** Normaliza el rol que llega del backend; cae a STUDENT (el menos privilegiado) si no coincide. */
+export const parseUserRole = (value: string | null | undefined): TUserRole => {
+  const isKnownRole = Object.values(EUserRole).some((role) => role === value);
+  return isKnownRole ? (value as TUserRole) : EUserRole.STUDENT;
+};

@@ -19,8 +19,8 @@ export default defineConfig(async () => {
           bindings: {
             TEST_MIGRATIONS: migrations,
             BETTER_AUTH_SECRET: "test-secret-test-secret-test-secret-1234",
-            BETTER_AUTH_URL: "http://localhost:3000",
-            CORS_ORIGIN: "http://localhost:3001",
+            BETTER_AUTH_URL: "http://localhost:3001",
+            CORS_ORIGIN: "http://localhost:3000",
             SEED_TOKEN: "test-seed-token",
           },
         },

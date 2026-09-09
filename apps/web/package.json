@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@electrolitos/env": "workspace:*",
+    "@electrolitos/shared": "workspace:*",
     "@electrolitos/ui": "workspace:*",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-form": "^1.33.2",

@@ -1,34 +1,33 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Button } from "@electrolitos/ui/components/button";
+import { Link, createFileRoute } from "@tanstack/react-router";
+
+import { authClient } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/")({
-  component: HomeComponent,
+  component: HomePage,
 });
 
-const TITLE_TEXT = `
- ██████╗ ███████╗████████╗████████╗███████╗██████╗
- ██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗
- ██████╔╝█████╗     ██║      ██║   █████╗  ██████╔╝
- ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██╗
- ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║
- ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝
+function HomePage() {
+  const { data: session } = authClient.useSession();
 
- ████████╗    ███████╗████████╗ █████╗  ██████╗██╗  ██╗
- ╚══██╔══╝    ██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
-    ██║       ███████╗   ██║   ███████║██║     █████╔╝
-    ██║       ╚════██║   ██║   ██╔══██║██║     ██╔═██╗
-    ██║       ███████║   ██║   ██║  ██║╚██████╗██║  ██╗
-    ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
- `;
-
-function HomeComponent() {
   return (
-    <div className="container mx-auto max-w-3xl px-4 py-2">
-      <pre className="overflow-x-auto font-mono text-sm">{TITLE_TEXT}</pre>
-      <div className="grid gap-6">
-        <section className="rounded-lg border p-4">
-          <h2 className="mb-2 font-medium">API Status</h2>
-        </section>
+    <div className="mx-auto flex min-h-[70vh] max-w-md flex-col items-center justify-center gap-6 px-4 text-center">
+      <div>
+        <h1 className="text-4xl font-bold text-foreground">Electrolitos</h1>
+        <p className="mt-2 text-muted-foreground">
+          Taller de electrónica de la academia Amautas: misiones, XP y medallas.
+        </p>
       </div>
+
+      {session ? (
+        <Link to="/dashboard">
+          <Button size="lg">Ir a mi panel</Button>
+        </Link>
+      ) : (
+        <Link to="/login">
+          <Button size="lg">Iniciar sesión</Button>
+        </Link>
+      )}
     </div>
   );
 }
