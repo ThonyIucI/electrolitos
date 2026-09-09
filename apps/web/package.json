@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
+    "deploy:pages": "vite build && wrangler pages deploy dist --project-name=electrolitos",
     "serve": "vite preview",
     "start": "vite",
     "check-types": "vite build && tsc --noEmit",
@@ -41,6 +42,7 @@
     "postcss": "^8.5.24",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
-    "vite": "^8.1.5"
+    "vite": "^8.1.5",
+    "wrangler": "^4.129.1"
   }
 }

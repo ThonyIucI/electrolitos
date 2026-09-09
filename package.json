@@ -16,7 +16,8 @@
     "db:generate": "pnpm --filter @electrolitos/db db:generate",
     "db:migrate:local": "pnpm --filter server db:migrate:local",
     "db:migrate:remote": "pnpm --filter server db:migrate:remote",
-    "deploy:server": "pnpm --filter server run deploy:worker"
+    "deploy:server": "pnpm --filter server run deploy:worker",
+    "deploy:web": "pnpm --filter web run deploy:pages"
   },
   "dependencies": {
     "@electrolitos/env": "workspace:*",

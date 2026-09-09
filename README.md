@@ -109,14 +109,26 @@ Dominio propio: API en `electrolitos-api.gaiamundo.com`, web en `electrolitos.ga
 completos: `../planning/CLOUDFLARE_SETUP.md`.
 
 ```bash
+# API (Worker + config + vars)
+pnpm deploy:server
+
+# Front (build + subida a Cloudflare Pages)
+pnpm deploy:web
+```
+
+Ambos comandos publican en producción desde tu terminal, usando la sesión de
+`wrangler login`. No hacen falta API tokens ni el formulario de Workers Builds.
+
+Secrets de producción (solo la primera vez o al rotarlos):
+
+```bash
 pnpm --filter server exec wrangler secret put BETTER_AUTH_SECRET
 pnpm --filter server exec wrangler secret put SEED_TOKEN
 pnpm db:migrate:remote
-pnpm deploy:server
 ```
 
-El front se publica solo desde Cloudflare Pages en cada push a `main`
-(build `pnpm --filter web build`, output `apps/web/dist`, var `VITE_SERVER_URL`).
+> Los scripts se llaman `deploy:worker` y `deploy:pages` dentro de cada app porque `deploy`
+> es un comando propio de pnpm y secuestraría el script.
 
 ## Convenciones
 
