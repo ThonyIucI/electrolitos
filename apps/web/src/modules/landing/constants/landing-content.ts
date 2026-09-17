@@ -3,6 +3,7 @@
 export const WHATSAPP_NUMBER = "910130488";
 export const WHATSAPP_LINK = `https://wa.me/51${WHATSAPP_NUMBER}`;
 export const COURSE_PRICE = "S/ 50.00";
+export const RESERVATION_PRICE = "S/ 10.00";
 
 export const HERO_HIGHLIGHTS = [
   "Arduino",

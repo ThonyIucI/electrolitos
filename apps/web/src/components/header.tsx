@@ -11,8 +11,11 @@ const NAV_LINKS = [
   { to: "/alumnos", label: "Alumnos" },
 ] as const;
 
-/** El login es pantalla completa y trae su propio control de tema. */
-const CHROMELESS_ROUTES: readonly string[] = ["/login"];
+/**
+ * El login es pantalla completa y trae su propio control de tema. La portada trae su
+ * propio encabezado de dos filas (`LandingHeader`), con las pestañas dentro.
+ */
+const CHROMELESS_ROUTES: readonly string[] = ["/login", "/"];
 
 export default function Header() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });

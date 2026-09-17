@@ -1,4 +1,11 @@
-import { COURSE_PRICE, ENROLLMENT_NOTES, PAYMENT_STEPS } from "../constants/landing-content";
+import { Ticket } from "lucide-react";
+
+import {
+  COURSE_PRICE,
+  ENROLLMENT_NOTES,
+  PAYMENT_STEPS,
+  RESERVATION_PRICE,
+} from "../constants/landing-content";
 import { COURSE_HOURS } from "../constants/landing-syllabus";
 import { formatHours } from "../utils/format-hours";
 import LandingSection from "./landing-section";
@@ -21,8 +28,7 @@ export default function InvestmentSection() {
       <Reveal delay={80}>
         <div className="mt-4 rounded-2xl bg-card p-4 shadow-sticker">
           <p className="text-landing-body text-muted-foreground">
-            Concluidas esas dos sesiones, quien decida continuar abona el monto del curso completo,
-            en cuota única:
+            Concluidas esas dos sesiones, quien decida continuar abona el monto del curso:
           </p>
           <p className="mt-3 text-landing-display font-heading font-bold text-foreground tabular-nums">
             {COURSE_PRICE}
@@ -34,6 +40,26 @@ export default function InvestmentSection() {
             El monto cubre las 8 sesiones, el uso de todos los materiales y componentes, y el acceso
             a la plataforma del taller durante todo el curso.
           </p>
+          <p className="mt-3 text-landing-body text-muted-foreground">
+            <strong className="font-heading text-foreground">No tiene que pagarse de una vez:</strong>{" "}
+            el curso puede abonarse en partes, según lo que se acuerde con el docente. Que el monto
+            no sea el motivo por el que un chico se quede fuera.
+          </p>
+        </div>
+      </Reveal>
+
+      <Reveal delay={110}>
+        <div className="mt-4 flex gap-3 rounded-2xl bg-spark p-4 text-spark-foreground shadow-sticker">
+          <Ticket className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
+          <div>
+            <p className="text-landing-title font-heading font-bold">
+              Separa la vacante con {RESERVATION_PRICE}
+            </p>
+            <p className="mt-1 text-landing-body">
+              Los cupos son limitados. Con {RESERVATION_PRICE} el lugar queda apartado y el resto se
+              abona según lo coordinado con el docente.
+            </p>
+          </div>
         </div>
       </Reveal>
 

@@ -161,9 +161,15 @@ Detalles que conviene no romper:
 - Escala tipográfica propia (`text-landing-body` 14 px · `text-landing-title` 16 px ·
   `text-landing-display` 20 px), definida en `packages/ui/src/styles/globals.css`. **Solo
   aplica a la portada**; el resto de la app mantiene body 18 px.
-- La barra de pestañas se pega en `top-[66px]`, que es el alto del `Header` (`h-16` + borde
-  de 2 px). **Si cambia el alto del encabezado hay que cambiar ese valor** y la constante
-  `HEADER_OFFSET` de `routes/index.tsx`.
+- La portada **no usa el `Header` global** (está en `CHROMELESS_ROUTES`): trae el suyo,
+  `LandingHeader`, de dos filas — marca/tema/ingresar arriba y las pestañas abajo — pegado
+  al tope. Al bajar se desplaza `-translate-y-14` y queda solo la fila de pestañas; al subir
+  vuelve entero. **Se desplaza, no se encoge**: cambiarle el alto acortaría el documento y el
+  contenido saltaría a media lectura. El estado lo da `common/hooks/use-scroll-direction.ts`,
+  un único listener compartido con `useSyncExternalStore` para que nada se desfase.
+- El borde inferior lo pone la fila de pestañas, no el encabezado, para que su `offsetHeight`
+  sea exactamente el alto que queda fijo arriba: es lo que `routes/index.tsx` resta al
+  reposicionar la página cuando cambias de pestaña. Si lo mueves, el primer párrafo se tapa.
 - Las transiciones de entrada al scrollear son CSS + `IntersectionObserver`
   (`modules/landing/hooks/use-reveal.ts`), sin librería de animación, y se desactivan solas
   con `prefers-reduced-motion`. Lo mismo el carrusel y la cinta de pastillas.

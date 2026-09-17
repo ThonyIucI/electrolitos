@@ -21,20 +21,37 @@ const nextTab = (current: TLandingTab, step: number): TLandingTab => {
 };
 
 /**
- * Navegación de la portada. Queda pegada bajo el encabezado y se desplaza en horizontal:
- * en un celular no entran diez pestañas, pero sí se alcanzan todas con el pulgar.
+ * Navegación de la portada: la segunda fila de `LandingHeader`. Se desplaza en horizontal
+ * porque en un celular no entran diez pestañas, pero sí se alcanzan todas con el pulgar.
  */
 export default function LandingTabNav({ activeTab, onSelect }: ILandingTabNavProps) {
+  const listRef = useRef<HTMLDivElement | null>(null);
   const activeRef = useRef<HTMLButtonElement | null>(null);
 
+  /*
+    Se centra la pestaña activa moviendo solo la tira horizontal. `scrollIntoView` habría
+    sido más corto, pero también mueve el scroll vertical de la página y pelea con el
+    reposicionamiento que hace la portada al cambiar de pestaña.
+  */
   useEffect(() => {
-    activeRef.current?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+    const list = listRef.current;
+    const active = activeRef.current;
+
+    if (!list || !active) {
+      return;
+    }
+
+    list.scrollTo({
+      left: active.offsetLeft - (list.clientWidth - active.clientWidth) / 2,
+      behavior: "smooth",
+    });
   }, [activeTab]);
 
   return (
-    /* 66 px = alto del encabezado (h-16) más su borde de 2 px. */
-    <div className="sticky top-[66px] z-10 border-b border-border bg-background/95 backdrop-blur">
+    /* Quien se pega al tope es `LandingHeader`; esta es solo su segunda fila. */
+    <div className="w-full min-w-0 border-b-2 border-border">
       <div
+        ref={listRef}
         role="tablist"
         aria-label="Secciones del taller"
         onKeyDown={(event) => {
@@ -45,7 +62,7 @@ export default function LandingTabNav({ activeTab, onSelect }: ILandingTabNavPro
           event.preventDefault();
           onSelect(nextTab(activeTab, event.key === "ArrowRight" ? 1 : -1));
         }}
-        className="mx-auto flex max-w-3xl gap-1 overflow-x-auto px-3 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="mx-auto flex max-w-3xl gap-1 overflow-x-auto px-3 py-2 scrollbar-none [&::-webkit-scrollbar]:hidden"
       >
         {LANDING_TABS.map((tab) => {
           const isActive = tab.key === activeTab;
