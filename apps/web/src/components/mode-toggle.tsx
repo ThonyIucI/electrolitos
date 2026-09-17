@@ -1,29 +1,26 @@
 import { Button } from "@electrolitos/ui/components/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@electrolitos/ui/components/dropdown-menu";
 import { Moon, Sun } from "lucide-react";
 
 import { useTheme } from "@/components/theme-provider";
 
+/**
+ * Un solo toque cambia al tema opuesto. Sin desplegable: es una preferencia binaria y
+ * el aspecto (sol ↔ luna) ya dice en cuál está. Al entrar por primera vez se respeta
+ * el tema del sistema; el primer toque lo fija.
+ */
 export function ModeToggle() {
-  const { setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="outline" size="icon" />}>
-        <Sun className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-        <Moon className="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-        <span className="sr-only">Cambiar tema</span>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")}>Claro</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>Oscuro</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>Sistema</DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Button
+      variant="outline"
+      size="icon"
+      aria-label={isDark ? "Cambiar a tema claro" : "Cambiar a tema oscuro"}
+      onClick={() => setTheme(isDark ? "light" : "dark")}
+    >
+      <Sun className="size-5 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+      <Moon className="absolute size-5 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+    </Button>
   );
 }

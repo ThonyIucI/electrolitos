@@ -27,7 +27,7 @@ export default function LandingSection({
   const accentClasses = LANDING_ACCENTS[accent];
 
   return (
-    <section id={id} className={cn("scroll-mt-20 px-4 py-10 sm:py-14", className)}>
+    <section id={id} className={cn("px-4 py-8", className)}>
       <div className="mx-auto max-w-3xl">
         <Reveal>
           <p className="flex items-center gap-2 font-heading text-xs font-bold tracking-[0.14em] text-muted-foreground uppercase">

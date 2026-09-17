@@ -8,7 +8,7 @@ import Reveal from "./reveal";
 
 export default function ContactSection() {
   return (
-    <section id="informes" className="scroll-mt-20 px-4 py-12 sm:py-16">
+    <section id="informes" className="px-4 pt-4 pb-12">
       <div className="mx-auto max-w-3xl">
         <Reveal>
           <div className="rounded-3xl bg-primary/10 p-6 text-center">
@@ -39,7 +39,7 @@ export default function ContactSection() {
 
         <Reveal delay={80}>
           <p className="mt-6 text-center text-landing-body text-muted-foreground">
-            Electrolitos — Academia Amautas
+            Electrolitos — Academia 
           </p>
         </Reveal>
       </div>

@@ -195,6 +195,9 @@
   --shadow-sticker: var(--shadow-sticker);
   --shadow-sticker-md: var(--shadow-sticker-md);
 
+  /* Cinta de pastillas de la portada: media vuelta y repite, con la lista duplicada. */
+  --animate-marquee: marquee 26s linear infinite;
+
   /*
     Escala exclusiva de la portada pública (`/`). El resto de la app mantiene body 18 px:
     la portada la leen apoderados en una sola pasada, la app la usan los chicos en clase.
@@ -213,6 +216,15 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 16px);
   --radius-4xl: calc(var(--radius) + 24px);
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 @layer base {

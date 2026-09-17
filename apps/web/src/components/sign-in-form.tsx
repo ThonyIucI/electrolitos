@@ -92,7 +92,7 @@ export default function SignInForm() {
                       type="email"
                       autoComplete="email"
                       inputMode="email"
-                      placeholder="profe@amautas.pe"
+                      placeholder="ingresa tu correo"
                       aria-invalid={hasError}
                       className="pl-12"
                       value={field.state.value}

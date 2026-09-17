@@ -9,7 +9,31 @@ export const HERO_HIGHLIGHTS = [
   "Programación",
   "Armado de circuitos",
   "Creatividad y pensamiento lógico",
+  "Sensores",
+  "Robótica",
+  "Trabajo en equipo",
 ] as const;
+
+export interface IHeroSlide {
+  src: string;
+  alt: string;
+}
+
+/** Originales en `docs/images/carrousel`, reescalados a WebP para que carguen con mala señal. */
+export const HERO_SLIDES: readonly IHeroSlide[] = [
+  {
+    src: "/carrusel/arduino.webp",
+    alt: "Placa Arduino conectada a una protoboard, una pantalla LCD y módulos de relé",
+  },
+  {
+    src: "/carrusel/programacion.webp",
+    alt: "Manos escribiendo código en una laptop con datos saliendo de la pantalla",
+  },
+  {
+    src: "/carrusel/creatividad.webp",
+    alt: "Ilustración de un cerebro: el lado lógico con engranajes y el creativo con colores",
+  },
+];
 
 export const INTRO_PARAGRAPHS = [
   "El presente taller brinda conocimientos teóricos y prácticos relacionados con ramas de la ingeniería tales como electrónica básica, programación, robótica, etc.",

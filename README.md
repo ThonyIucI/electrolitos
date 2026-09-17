@@ -152,16 +152,32 @@ Vive en `apps/web/src/modules/landing/`; los textos, el temario y las sedes son 
 `modules/landing/constants/`, no hay fetch. Fuente del contenido: `../docs/informativo-v2.md`
 — **si cambian precios, fechas o temario, se edita ahí y luego en esas constantes.**
 
+No se lee de corrido: el contenido va en **pestañas** (`constants/landing-tabs.ts` define la
+lista y `components/landing-panel.tsx` mapea cada una a su sección). Solo se monta la pestaña
+activa, y al cambiarla la barra queda pegada bajo el encabezado.
+
 Detalles que conviene no romper:
 
 - Escala tipográfica propia (`text-landing-body` 14 px · `text-landing-title` 16 px ·
   `text-landing-display` 20 px), definida en `packages/ui/src/styles/globals.css`. **Solo
   aplica a la portada**; el resto de la app mantiene body 18 px.
+- La barra de pestañas se pega en `top-[66px]`, que es el alto del `Header` (`h-16` + borde
+  de 2 px). **Si cambia el alto del encabezado hay que cambiar ese valor** y la constante
+  `HEADER_OFFSET` de `routes/index.tsx`.
 - Las transiciones de entrada al scrollear son CSS + `IntersectionObserver`
   (`modules/landing/hooks/use-reveal.ts`), sin librería de animación, y se desactivan solas
-  con `prefers-reduced-motion`.
+  con `prefers-reduced-motion`. Lo mismo el carrusel y la cinta de pastillas.
+- La cinta de pastillas duplica la lista y se desplaza exactamente un 50 %: **no le pongas
+  `gap` al `<ul>` exterior** o el reinicio salta. Su `w-max` propaga ancho intrínseco hacia
+  arriba, así que la cadena `main → section → Reveal → cinta` lleva `w-full min-w-0` y `main`
+  recorta con `overflow-x-clip` — **con `overflow-x-hidden` se rompe el sticky de las
+  pestañas**, porque fuerza a `overflow-y` a ser un contenedor de scroll.
+- Imágenes del carrusel en `public/carrusel/*.webp`. Los originales están en
+  `../docs/images/carrousel`; se reescalaron a 1200 px de ancho (1.8 MB → 164 KB). Si
+  agregas una, pásala por el mismo tratamiento antes de copiarla.
 - El `Header` oculta la navegación de staff cuando no hay sesión: un visitante solo ve el
   logo, el selector de tema y el botón **Ingresar**.
+- El tema arranca en `system` y el botón del encabezado alterna claro/oscuro de un toque.
 
 ## Convenciones
 

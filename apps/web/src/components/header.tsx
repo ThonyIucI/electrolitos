@@ -24,7 +24,8 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-20 border-b-2 border-border bg-card/90 backdrop-blur">
-      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
+      {/* Alto fijo: la navegación de la portada se pega justo debajo y necesita saberlo. */}
+      <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-3 px-4">
         <div className="flex items-center gap-3">
           <Link to="/" aria-label="Electrolitos — inicio">
             <BrandMark size="sm" />

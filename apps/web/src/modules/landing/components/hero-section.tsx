@@ -1,28 +1,34 @@
 import { Button } from "@electrolitos/ui/components/button";
-import { ArrowDown, MessageCircle, Sparkles } from "lucide-react";
+import { BookOpen, MessageCircle, Sparkles } from "lucide-react";
 
-import Wordmark from "@/components/wordmark";
-
-import { HERO_HIGHLIGHTS, WHATSAPP_LINK } from "../constants/landing-content";
+import { WHATSAPP_LINK } from "../constants/landing-content";
+import HeroCarousel from "./hero-carousel";
+import HighlightsMarquee from "./highlights-marquee";
 import Reveal from "./reveal";
 
-/** Portada: quién dicta, qué es, para quién, y el gancho de las dos clases gratis. */
-export default function HeroSection() {
+interface IHeroSectionProps {
+  onOpenSyllabus: () => void;
+}
+
+/** Portada: qué es, para quién, y el gancho de las dos clases gratis. */
+export default function HeroSection({ onOpenSyllabus }: IHeroSectionProps) {
   return (
-    <section className="relative overflow-hidden px-4 pt-10 pb-12 sm:pt-16 sm:pb-16">
+    /* El padding lateral va por bloque, no en la sección: así la cinta de pastillas
+       llega de borde a borde sin márgenes negativos. */
+    <section className="relative w-full min-w-0 overflow-hidden pt-8 pb-10">
       {/* Halo de marca, muy tenue: da color sin convertir el fondo en un afiche. */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 -top-24 h-72 bg-[radial-gradient(60%_60%_at_50%_0%,var(--color-primary)_0%,transparent_70%)] opacity-[0.14]"
       />
 
-      <div className="relative mx-auto flex max-w-3xl flex-col items-center text-center">
-        <Reveal>
-          <Wordmark className="h-20 w-auto sm:h-24" />
+      <div className="relative mx-auto flex max-w-3xl flex-col items-center px-4 text-center">
+        <Reveal className="w-full">
+          <HeroCarousel />
         </Reveal>
 
         <Reveal delay={80}>
-          <span className="mt-6 inline-flex items-center gap-1.5 rounded-full bg-spark/20 px-3 py-1 font-heading text-xs font-bold text-spark-foreground dark:text-spark">
+          <span className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-spark/20 px-3 py-1 font-heading text-xs font-bold text-spark-foreground dark:text-spark">
             <Sparkles className="size-3.5" aria-hidden="true" />
             Las 2 primeras clases son gratis
           </span>
@@ -37,44 +43,30 @@ export default function HeroSection() {
             programa, se prueba y se rompe hasta que funciona.
           </p>
         </Reveal>
-
-        <Reveal delay={200} className="w-full">
-          <ul className="mt-6 flex flex-wrap justify-center gap-2">
-            {HERO_HIGHLIGHTS.map((highlight) => (
-              <li
-                key={highlight}
-                className="rounded-full bg-secondary px-3 py-1.5 text-landing-body font-bold text-secondary-foreground"
-              >
-                {highlight}
-              </li>
-            ))}
-          </ul>
-        </Reveal>
-
-        <Reveal delay={260} className="w-full">
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <Button
-              render={
-                <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
-                  <MessageCircle aria-hidden="true" />
-                  Escríbenos por WhatsApp
-                </a>
-              }
-              size="lg"
-            />
-            <Button
-              render={
-                <a href="#contenido">
-                  <ArrowDown aria-hidden="true" />
-                  Ver el contenido
-                </a>
-              }
-              size="lg"
-              variant="outline"
-            />
-          </div>
-        </Reveal>
       </div>
+
+      <Reveal delay={200} className="relative mt-6 w-full min-w-0">
+        <HighlightsMarquee />
+      </Reveal>
+
+      <Reveal delay={260} className="relative mx-auto mt-7 max-w-3xl px-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+          <Button size="lg" onClick={onOpenSyllabus}>
+            <BookOpen aria-hidden="true" />
+            Ver el contenido
+          </Button>
+          <Button
+            render={
+              <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
+                <MessageCircle aria-hidden="true" />
+                Escríbenos por WhatsApp
+              </a>
+            }
+            size="lg"
+            variant="outline"
+          />
+        </div>
+      </Reveal>
     </section>
   );
 }
