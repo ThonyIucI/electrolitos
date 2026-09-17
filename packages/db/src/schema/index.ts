@@ -1,2 +1,4 @@
 export * from "./auth";
-export {};
+export * from "./courses";
+export * from "./houses";
+export * from "./students";

@@ -8,123 +8,130 @@
 
 /*
   Tokens del design system de Amautas (planning/DESIGN_SYSTEM.md).
+  Paleta tomada del logo: la chakana de cuatro cuadrantes — verde #007A2C, ámbar #F8B000,
+  rojo #F5001E, azul #0066F5 — sobre el azul marino del lettering (#001848).
   Los valores viven SOLO aquí: los componentes consumen bg-primary, text-spark, etc.
-  Nunca escribir hex en un componente.
+  Nunca escribir hex en un componente. Todos los pares verificados en contraste AA.
 */
 
 :root {
-  /* Papel cálido */
-  --background: oklch(0.9843 0.0135 78.26);
-  --foreground: oklch(0.2434 0.0577 285.68);
+  /* Papel frío, del blanco sobre el que vive el logo */
+  --background: oklch(0.9787 0.0057 264.53);
+  --foreground: oklch(0.2285 0.0954 260.42);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2434 0.0577 285.68);
+  --card-foreground: oklch(0.2285 0.0954 260.42);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2434 0.0577 285.68);
+  --popover-foreground: oklch(0.2285 0.0954 260.42);
 
-  /* Voltio */
-  --primary: oklch(0.5106 0.2301 276.97);
+  /* Azul del cuadrante inferior derecho: acciones */
+  --primary: oklch(0.5549 0.2286 260.18);
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.958 0.0202 279.94);
-  --secondary-foreground: oklch(0.3984 0.1773 277.37);
+  --secondary: oklch(0.9447 0.0262 264.44);
+  --secondary-foreground: oklch(0.4416 0.1877 261.76);
 
-  --muted: oklch(0.9541 0.0188 83.06);
-  --muted-foreground: oklch(0.4711 0.053 291.16);
-  --accent: oklch(0.9622 0.0384 83.83);
-  --accent-foreground: oklch(0.2434 0.0577 285.68);
+  --muted: oklch(0.9574 0.0116 264.51);
+  --muted-foreground: oklch(0.508 0.0628 269.54);
+  --accent: oklch(0.9547 0.0199 267.29);
+  --accent-foreground: oklch(0.2285 0.0954 260.42);
 
-  /* Chispa (XP), Circuito (éxito), Señal (info), Cortocircuito (error) */
-  --spark: oklch(0.8069 0.1662 81.75);
+  /* Chispa (ámbar del logo), Circuito (verde), Señal, Cortocircuito */
+  --spark: oklch(0.8046 0.1671 79.02);
   --spark-foreground: oklch(0.2418 0.0497 83.05);
-  --success: oklch(0.6137 0.1504 152.29);
+  --success: oklch(0.5051 0.1481 147.5);
   --success-foreground: oklch(1 0 0);
-  --info: oklch(0.6089 0.1109 221.72);
+  --info: oklch(0.5384 0.0912 210.81);
   --info-foreground: oklch(1 0 0);
-  --destructive: oklch(0.6256 0.1933 23.03);
+  /* Un punto más oscuro que el rojo del logo para llegar a AA con texto blanco */
+  --destructive: oklch(0.5708 0.2319 25.85);
   --destructive-foreground: oklch(1 0 0);
 
-  --border: oklch(0.8882 0.0278 83.53);
-  --input: oklch(0.8882 0.0278 83.53);
-  --ring: oklch(0.5106 0.2301 276.97);
+  --border: oklch(0.9054 0.0235 264.45);
+  --input: oklch(0.9054 0.0235 264.45);
+  --ring: oklch(0.5549 0.2286 260.18);
 
   --radius: 1rem;
 
   /* Sombra "sticker": borde inferior duro, sensación de pieza física */
-  --shadow-sticker: 0 2px 0 oklch(0.3 0.05 280 / 0.14);
-  --shadow-sticker-md: 0 6px 16px oklch(0.3 0.05 280 / 0.14);
+  --shadow-sticker: 0 2px 0 oklch(0.23 0.095 260 / 0.16);
+  --shadow-sticker-md: 0 6px 16px oklch(0.23 0.095 260 / 0.16);
 
-  /* Casas: dato de identidad, NO se re-tematizan en dark */
-  --house-red: oklch(0.6256 0.1933 23.03);
-  --house-blue: oklch(0.5741 0.2015 262);
-  --house-green: oklch(0.6137 0.1504 152.29);
-  --house-yellow: oklch(0.8069 0.1662 81.75);
+  /*
+    Casas = los cuatro cuadrantes de la chakana, en su color exacto del logo.
+    Son dato de identidad: no se re-tematizan en dark ni se ajustan por contraste
+    (siempre van con ícono + nombre, nunca color a secas).
+  */
+  --house-green: oklch(0.5051 0.1481 147.5);
+  --house-yellow: oklch(0.8046 0.1671 79.02);
+  --house-red: oklch(0.6103 0.2485 26.72);
+  --house-blue: oklch(0.5549 0.2286 260.18);
   --house-purple: oklch(0.6056 0.2189 292.72);
   --house-orange: oklch(0.7049 0.1867 47.6);
 
   /* Niveles: dato */
-  --level-recluta: oklch(0.7137 0.0192 261.32);
+  --level-recluta: oklch(0.6765 0.0469 266.7);
   --level-tecnico: oklch(0.8276 0.1013 230.32);
-  --level-ingeniero: oklch(0.8069 0.1662 81.75);
+  --level-ingeniero: oklch(0.8046 0.1671 79.02);
   --level-jefe: oklch(0.709 0.1592 293.54);
 
   --chart-1: var(--house-blue);
   --chart-2: var(--house-green);
   --chart-3: var(--house-yellow);
-  --chart-4: var(--house-purple);
-  --chart-5: var(--house-orange);
+  --chart-4: var(--house-red);
+  --chart-5: var(--house-purple);
 
   --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.2434 0.0577 285.68);
-  --sidebar-primary: oklch(0.5106 0.2301 276.97);
+  --sidebar-foreground: oklch(0.2285 0.0954 260.42);
+  --sidebar-primary: oklch(0.5549 0.2286 260.18);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.9622 0.0384 83.83);
-  --sidebar-accent-foreground: oklch(0.2434 0.0577 285.68);
-  --sidebar-border: oklch(0.8882 0.0278 83.53);
-  --sidebar-ring: oklch(0.5106 0.2301 276.97);
+  --sidebar-accent: oklch(0.9547 0.0199 267.29);
+  --sidebar-accent-foreground: oklch(0.2285 0.0954 260.42);
+  --sidebar-border: oklch(0.9054 0.0235 264.45);
+  --sidebar-ring: oklch(0.5549 0.2286 260.18);
 }
 
 .dark {
-  /* Noche índigo */
-  --background: oklch(0.204 0.0578 283);
-  --foreground: oklch(0.9699 0.0162 297.53);
-  --card: oklch(0.2505 0.0644 284.62);
-  --card-foreground: oklch(0.9699 0.0162 297.53);
-  --popover: oklch(0.2505 0.0644 284.62);
-  --popover-foreground: oklch(0.9699 0.0162 297.53);
+  /* Noche azul marino, del lettering del logo llevado a fondo */
+  --background: oklch(0.1942 0.057 263.55);
+  --foreground: oklch(0.9432 0.0154 269.98);
+  --card: oklch(0.2502 0.0747 264.45);
+  --card-foreground: oklch(0.9432 0.0154 269.98);
+  --popover: oklch(0.2502 0.0747 264.45);
+  --popover-foreground: oklch(0.9432 0.0154 269.98);
 
-  --primary: oklch(0.6767 0.1768 283.17);
-  --primary-foreground: oklch(0.1782 0.0499 283.73);
-  --secondary: oklch(0.3048 0.0838 284.02);
-  --secondary-foreground: oklch(0.9023 0.0504 289.06);
+  --primary: oklch(0.7236 0.1443 258.39);
+  --primary-foreground: oklch(0.188 0.0538 262.35);
+  --secondary: oklch(0.3016 0.0823 262.86);
+  --secondary-foreground: oklch(0.8822 0.0571 266.64);
 
-  --muted: oklch(0.2276 0.0602 284.8);
-  --muted-foreground: oklch(0.7334 0.0547 292.23);
-  --accent: oklch(0.3074 0.0568 291.29);
-  --accent-foreground: oklch(0.9699 0.0162 297.53);
+  --muted: oklch(0.2312 0.0664 264.5);
+  --muted-foreground: oklch(0.7518 0.0436 268.92);
+  --accent: oklch(0.315 0.0845 264.13);
+  --accent-foreground: oklch(0.9432 0.0154 269.98);
 
-  --spark: oklch(0.8613 0.1592 86.42);
+  --spark: oklch(0.8474 0.161 83.38);
   --spark-foreground: oklch(0.2418 0.0497 83.05);
   --success: oklch(0.8003 0.1821 151.71);
-  --success-foreground: oklch(0.2664 0.0628 152.93);
-  --info: oklch(0.8651 0.1153 207.08);
-  --info-foreground: oklch(0.3018 0.0541 229.7);
-  --destructive: oklch(0.7363 0.1614 21.8);
-  --destructive-foreground: oklch(0.2005 0.0536 23.23);
+  --success-foreground: oklch(0.2235 0.0515 152.48);
+  --info: oklch(0.8247 0.1052 206.9);
+  --info-foreground: oklch(0.2634 0.042 213.19);
+  --destructive: oklch(0.7638 0.1417 15.59);
+  --destructive-foreground: oklch(0.1874 0.0658 17.33);
 
   --border: oklch(1 0 0 / 14%);
   --input: oklch(1 0 0 / 18%);
-  --ring: oklch(0.6767 0.1768 283.17);
+  --ring: oklch(0.7236 0.1443 258.39);
 
-  --shadow-sticker: 0 2px 0 oklch(0 0 0 / 0.4);
-  --shadow-sticker-md: 0 6px 18px oklch(0 0 0 / 0.45);
+  --shadow-sticker: 0 2px 0 oklch(0 0 0 / 0.45);
+  --shadow-sticker-md: 0 6px 18px oklch(0 0 0 / 0.5);
 
-  --sidebar: oklch(0.2505 0.0644 284.62);
-  --sidebar-foreground: oklch(0.9699 0.0162 297.53);
-  --sidebar-primary: oklch(0.6767 0.1768 283.17);
-  --sidebar-primary-foreground: oklch(0.1782 0.0499 283.73);
-  --sidebar-accent: oklch(0.3074 0.0568 291.29);
-  --sidebar-accent-foreground: oklch(0.9699 0.0162 297.53);
+  --sidebar: oklch(0.2502 0.0747 264.45);
+  --sidebar-foreground: oklch(0.9432 0.0154 269.98);
+  --sidebar-primary: oklch(0.7236 0.1443 258.39);
+  --sidebar-primary-foreground: oklch(0.188 0.0538 262.35);
+  --sidebar-accent: oklch(0.315 0.0845 264.13);
+  --sidebar-accent-foreground: oklch(0.9432 0.0154 269.98);
   --sidebar-border: oklch(1 0 0 / 14%);
-  --sidebar-ring: oklch(0.6767 0.1768 283.17);
+  --sidebar-ring: oklch(0.7236 0.1443 258.39);
 }
 
 @theme inline {

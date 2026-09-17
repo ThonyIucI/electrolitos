@@ -10,7 +10,7 @@ import z from "zod";
 
 import { EUserRole } from "@electrolitos/shared/roles";
 
-import BrandMark from "@/components/brand-mark";
+import Wordmark from "@/components/wordmark";
 import { authClient } from "@/lib/auth-client";
 
 import Loader from "./loader";
@@ -59,15 +59,9 @@ export default function SignInForm() {
 
   return (
     <div className="w-full max-w-md">
-      <div className="mb-8 flex flex-col items-center text-center">
-        <BrandMark size="lg" />
-        <h1 className="mt-5 font-heading text-4xl font-extrabold tracking-tight text-foreground">
-          Electrolitos
-        </h1>
-        <p className="mt-1 text-base text-muted-foreground">
-          Laboratorio de aventuras · Academia Amautas
-        </p>
-      </div>
+      <h1 className="mb-2 flex justify-center">
+        <Wordmark className="w-64 max-w-full" />
+      </h1>
 
       <div className="rounded-3xl border-2 border-border bg-card p-6 shadow-sticker-md sm:p-8">
         <p className="mb-6 inline-flex items-center gap-2 rounded-full bg-secondary px-3.5 py-1.5 font-heading text-sm font-bold text-secondary-foreground">

@@ -5,5 +5,6 @@ export default defineConfig({
     preset: "2023",
   },
   preset,
-  images: ["public/logo.png"],
+  // La chakana del taller: cuadrada y simétrica, se reconoce hasta a 16 px.
+  images: ["public/logo-chakana.png"],
 });

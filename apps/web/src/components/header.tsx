@@ -5,8 +5,8 @@ import { ModeToggle } from "./mode-toggle";
 import UserMenu from "./user-menu";
 
 const NAV_LINKS = [
-  { to: "/", label: "Inicio" },
   { to: "/dashboard", label: "Panel" },
+  { to: "/alumnos", label: "Alumnos" },
 ] as const;
 
 /** El login es pantalla completa y trae su propio control de tema. */

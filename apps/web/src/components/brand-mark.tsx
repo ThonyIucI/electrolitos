@@ -1,10 +1,9 @@
 import { cn } from "@electrolitos/ui/lib/utils";
-import { Zap } from "lucide-react";
 
 const SIZE_CLASSES = {
-  sm: { box: "size-10 rounded-xl", icon: "size-5" },
-  md: { box: "size-14 rounded-2xl", icon: "size-7" },
-  lg: { box: "size-20 rounded-3xl", icon: "size-10" },
+  sm: "size-10",
+  md: "size-14",
+  lg: "size-20",
 } as const;
 
 export type TBrandMarkSize = keyof typeof SIZE_CLASSES;
@@ -14,20 +13,14 @@ interface IBrandMarkProps {
   className?: string;
 }
 
-/** Sello de Electrolitos: rayo dorado sobre índigo eléctrico. */
+/** La chakana del taller: cuatro cuadrantes con el 1, el 0, el + y el −. */
 export default function BrandMark({ size = "md", className }: IBrandMarkProps) {
-  const { box, icon } = SIZE_CLASSES[size];
-
   return (
-    <span
+    <img
+      src="/logo-chakana.png"
+      alt=""
       aria-hidden="true"
-      className={cn(
-        "inline-flex items-center justify-center bg-primary shadow-sticker-md ring-4 ring-spark/30",
-        box,
-        className,
-      )}
-    >
-      <Zap className={cn("fill-spark text-spark", icon)} strokeWidth={1.5} />
-    </span>
+      className={cn("shrink-0 object-contain", SIZE_CLASSES[size], className)}
+    />
   );
 }

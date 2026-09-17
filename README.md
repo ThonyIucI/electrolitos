@@ -89,11 +89,26 @@ apunta a la URL del Worker y no hay proxy. Las cookies son `Lax` en HTTP local y
 
 ---
 
+### Crear el taller y registrar alumnos
+
+La primera vez que entres a **Alumnos** no habrá ningún taller: la pantalla te ofrece crearlo
+con los datos ya rellenados. Al crearlo aparecen también las cuatro casas de la chakana
+(Paulet, Antúnez, Villarreal y Reiche). Desde ahí puedes inscribir chicos.
+
+Para registrar rápido en clase basta **nombre y apellido**; la casa, el apoderado y la fecha
+de nacimiento son opcionales y se completan después. Cada inscripción genera su código de
+acceso de 6 caracteres (se usa en la Etapa 3, cuando los alumnos entren con su código).
+
+---
+
 ## Migraciones
 
 1. Editar el schema en `packages/db/src/schema/*.ts`
 2. `pnpm db:generate` → crea el SQL en `packages/db/src/migrations/` (**nunca** escribirlo a mano)
 3. `pnpm db:migrate:local` en desarrollo · `pnpm db:migrate:remote` en producción
+
+> Cada vez que traigas cambios con tablas nuevas hay que correr **las dos**: la local para
+> desarrollar y la remota antes de desplegar, o la API en producción fallará al consultarlas.
 
 ## Tests
 

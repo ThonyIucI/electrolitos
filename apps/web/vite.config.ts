@@ -40,8 +40,9 @@ export default defineConfig({
         name: "Electrolitos",
         short_name: "Electrolitos",
         description: "Academia Amautas: misiones, XP y medallas del taller de electrónica",
-        theme_color: "#141230",
-        background_color: "#141230",
+        // Azul del cuadrante inferior derecho de la chakana y noche azul marino del logo
+        theme_color: "#0066F5",
+        background_color: "#07132E",
         display: "standalone",
         lang: "es",
       },

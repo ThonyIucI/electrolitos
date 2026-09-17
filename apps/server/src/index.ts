@@ -8,6 +8,8 @@ import { logger } from "hono/logger";
 import type { TAppEnv } from "./lib/app-env";
 import { AppError } from "./lib/errors";
 import { fail } from "./lib/response";
+import { courseRoutes } from "./routes/courses";
+import { enrollmentRoutes } from "./routes/enrollments";
 import { healthRoutes } from "./routes/health";
 import { internalRoutes } from "./routes/internal";
 import { meRoutes } from "./routes/me";
@@ -46,6 +48,8 @@ app
   .basePath(API_PREFIX)
   .route("/", healthRoutes)
   .route("/", meRoutes)
+  .route("/", courseRoutes)
+  .route("/", enrollmentRoutes)
   .route("/", internalRoutes);
 
 app.notFound((context) => fail(context, "Recurso no encontrado.", 404));
