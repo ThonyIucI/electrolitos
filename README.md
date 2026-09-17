@@ -145,6 +145,24 @@ pnpm db:migrate:remote
 > Los scripts se llaman `deploy:worker` y `deploy:pages` dentro de cada app porque `deploy`
 > es un comando propio de pnpm y secuestraría el script.
 
+## Portada pública
+
+La ruta `/` es la portada informativa del taller (la que ve un apoderado antes de inscribir).
+Vive en `apps/web/src/modules/landing/`; los textos, el temario y las sedes son constantes en
+`modules/landing/constants/`, no hay fetch. Fuente del contenido: `../docs/informativo-v2.md`
+— **si cambian precios, fechas o temario, se edita ahí y luego en esas constantes.**
+
+Detalles que conviene no romper:
+
+- Escala tipográfica propia (`text-landing-body` 14 px · `text-landing-title` 16 px ·
+  `text-landing-display` 20 px), definida en `packages/ui/src/styles/globals.css`. **Solo
+  aplica a la portada**; el resto de la app mantiene body 18 px.
+- Las transiciones de entrada al scrollear son CSS + `IntersectionObserver`
+  (`modules/landing/hooks/use-reveal.ts`), sin librería de animación, y se desactivan solas
+  con `prefers-reduced-motion`.
+- El `Header` oculta la navegación de staff cuando no hay sesión: un visitante solo ve el
+  logo, el selector de tema y el botón **Ingresar**.
+
 ## Convenciones
 
 Ver `../CLAUDE.md`. Resumen: rutas → handler → query Drizzle, sin capas extra; zod en entrada;

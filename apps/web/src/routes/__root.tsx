@@ -18,7 +18,8 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
       },
       {
         name: "description",
-        content: "Taller de electrónica de la academia Amautas: misiones, XP y medallas.",
+        content:
+          "Taller de electrónica digital, Arduino y programación para niñas, niños y jóvenes desde los 10 años. Sedes en Samán y Ventarrones. Las 2 primeras clases son gratis.",
       },
     ],
     links: [

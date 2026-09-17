@@ -1,33 +1,41 @@
-import { Button } from "@electrolitos/ui/components/button";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 
-import { authClient } from "@/lib/auth-client";
+import AudienceSection from "@/modules/landing/components/audience-section";
+import BenefitsSection from "@/modules/landing/components/benefits-section";
+import CampusesSection from "@/modules/landing/components/campuses-section";
+import ContactSection from "@/modules/landing/components/contact-section";
+import HeroSection from "@/modules/landing/components/hero-section";
+import IntroSection from "@/modules/landing/components/intro-section";
+import InvestmentSection from "@/modules/landing/components/investment-section";
+import MethodologySection from "@/modules/landing/components/methodology-section";
+import MotivationSection from "@/modules/landing/components/motivation-section";
+import ObjectivesSection from "@/modules/landing/components/objectives-section";
+import SyllabusSection from "@/modules/landing/components/syllabus-section";
+import TeacherSection from "@/modules/landing/components/teacher-section";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
+/**
+ * Portada pública del taller. Sigue el orden del documento informativo
+ * (`docs/informativo-v2.md`) y usa la escala tipográfica `text-landing-*`.
+ */
 function HomePage() {
-  const { data: session } = authClient.useSession();
-
   return (
-    <div className="mx-auto flex min-h-[70vh] max-w-md flex-col items-center justify-center gap-6 px-4 text-center">
-      <div>
-        <h1 className="text-4xl font-bold text-foreground">Electrolitos</h1>
-        <p className="mt-2 text-muted-foreground">
-          Taller de electrónica de la academia Amautas: misiones, XP y medallas.
-        </p>
-      </div>
-
-      {session ? (
-        <Link to="/dashboard">
-          <Button size="lg">Ir a mi panel</Button>
-        </Link>
-      ) : (
-        <Link to="/login">
-          <Button size="lg">Iniciar sesión</Button>
-        </Link>
-      )}
-    </div>
+    <main className="text-landing-body">
+      <HeroSection />
+      <IntroSection />
+      <MotivationSection />
+      <ObjectivesSection />
+      <AudienceSection />
+      <MethodologySection />
+      <BenefitsSection />
+      <SyllabusSection />
+      <TeacherSection />
+      <CampusesSection />
+      <InvestmentSection />
+      <ContactSection />
+    </main>
   );
 }
