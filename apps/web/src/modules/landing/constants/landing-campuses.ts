@@ -10,6 +10,10 @@ export interface ICampus {
   freeSessions: readonly string[];
   courseStart: string;
   courseEnd: string;
+  /** Fin del plazo de inscripción, en ISO: es el día de la segunda sesión de cortesía. */
+  enrollmentDeadline: string;
+  /** Mensaje con el que se abre el chat de WhatsApp desde esta sede. */
+  whatsappMessage: string;
 }
 
 /**
@@ -27,6 +31,9 @@ export const CAMPUSES: readonly ICampus[] = [
     freeSessions: ["Sábado 12 de setiembre", "Sábado 19 de setiembre"],
     courseStart: "Sábado 26 de setiembre",
     courseEnd: "Sábado 14 de noviembre",
+    enrollmentDeadline: "2026-09-19",
+    whatsappMessage:
+      "Hola, quiero información para inscribir en el taller Electrolitos — sede Samán.",
   },
   {
     key: "ventarrones",
@@ -37,5 +44,8 @@ export const CAMPUSES: readonly ICampus[] = [
     freeSessions: ["Domingo 20 de setiembre", "Domingo 27 de setiembre"],
     courseStart: "Domingo 4 de octubre",
     courseEnd: "Domingo 22 de noviembre",
+    enrollmentDeadline: "2026-09-27",
+    whatsappMessage:
+      "Hola, quiero información para inscribir en el taller Electrolitos — sede Ventarrones.",
   },
 ];

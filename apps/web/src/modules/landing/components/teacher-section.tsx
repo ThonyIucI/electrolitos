@@ -1,4 +1,6 @@
-import { TEACHER } from "../constants/landing-content";
+import { Wrench } from "lucide-react";
+
+import { ENGINEER_NOTE, TEACHER } from "../constants/landing-content";
 import LandingSection from "./landing-section";
 import Reveal from "./reveal";
 
@@ -23,6 +25,20 @@ export default function TeacherSection() {
             <p className="mt-2 text-landing-body text-muted-foreground">{TEACHER.bio}</p>
           </div>
         </article>
+      </Reveal>
+
+      {/*
+        Va junto a la bio a propósito: la afirmación «son las mismas herramientas» solo
+        pesa porque la firma alguien que trabaja en un laboratorio de verdad.
+      */}
+      <Reveal delay={80}>
+        <div className="mt-4 rounded-2xl border-l-4 border-l-info bg-info/8 p-4">
+          <h3 className="flex items-center gap-2 text-landing-title font-heading font-bold text-foreground">
+            <Wrench className="size-4 shrink-0 text-info" aria-hidden="true" />
+            {ENGINEER_NOTE.title}
+          </h3>
+          <p className="mt-2 text-landing-body text-muted-foreground">{ENGINEER_NOTE.body}</p>
+        </div>
       </Reveal>
     </LandingSection>
   );

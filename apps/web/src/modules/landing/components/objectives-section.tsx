@@ -1,6 +1,6 @@
 import { Check } from "lucide-react";
 
-import { COURSE_OBJECTIVES } from "../constants/landing-content";
+import { COURSE_OBJECTIVES, OBJECTIVES_TITLE } from "../constants/landing-content";
 import LandingSection from "./landing-section";
 import Reveal from "./reveal";
 
@@ -9,7 +9,7 @@ export default function ObjectivesSection() {
     <LandingSection
       id="objetivos"
       eyebrow="Objetivos del curso"
-      title="Al finalizar, los participantes serán capaces de:"
+      title={OBJECTIVES_TITLE}
       accent="success"
     >
       <ul className="space-y-3">

@@ -1,9 +1,11 @@
+import { Button } from "@electrolitos/ui/components/button";
 import { cn } from "@electrolitos/ui/lib/utils";
-import { CalendarDays, Clock, MapPin } from "lucide-react";
+import { CalendarDays, Clock, MapPin, MessageCircle } from "lucide-react";
 
 import { CAMPUSES } from "../constants/landing-campuses";
 import { LANDING_ACCENTS } from "../constants/landing-accents";
-import { POSTPONEMENT_NOTE } from "../constants/landing-content";
+import { POSTPONEMENT_NOTE, whatsappLink } from "../constants/landing-content";
+import EnrollmentDeadline from "./enrollment-deadline";
 import LandingSection from "./landing-section";
 import Reveal from "./reveal";
 
@@ -16,6 +18,10 @@ export default function CampusesSection() {
       accent="primary"
       description="El taller se dicta de forma presencial en dos sedes, con sesiones semanales de 3 horas. Cada sede tiene su propio calendario."
     >
+      <Reveal>
+        <EnrollmentDeadline className="mb-4" />
+      </Reveal>
+
       <div className="grid gap-4 sm:grid-cols-2">
         {CAMPUSES.map((campus, index) => {
           const accentClasses = LANDING_ACCENTS[campus.accent];
@@ -23,7 +29,10 @@ export default function CampusesSection() {
           return (
             <Reveal key={campus.key} delay={index * 80} className="h-full">
               <article
-                className={cn("h-full rounded-2xl border-l-4 bg-card p-4 shadow-sticker", accentClasses.edge)}
+                className={cn(
+                  "flex h-full flex-col rounded-2xl border-l-4 bg-card p-4 shadow-sticker",
+                  accentClasses.edge,
+                )}
               >
                 <h3 className="text-landing-title font-heading font-bold text-foreground">
                   {campus.name}
@@ -65,6 +74,23 @@ export default function CampusesSection() {
                     <dd className="text-right font-bold text-foreground">{campus.courseEnd}</dd>
                   </div>
                 </dl>
+
+                {/* El chat se abre con la sede ya escrita: menos fricción y se sabe de dónde viene. */}
+                <div className="mt-auto pt-4">
+                  <Button
+                    render={
+                      <a
+                        href={whatsappLink(campus.whatsappMessage)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <MessageCircle aria-hidden="true" />
+                        Inscribir en {campus.name}
+                      </a>
+                    }
+                    className="w-full"
+                  />
+                </div>
               </article>
             </Reveal>
           );

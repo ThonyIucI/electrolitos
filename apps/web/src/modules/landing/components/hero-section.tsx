@@ -1,9 +1,11 @@
 import { Button } from "@electrolitos/ui/components/button";
 import { BookOpen, MessageCircle, Sparkles } from "lucide-react";
 
-import { WHATSAPP_LINK } from "../constants/landing-content";
+import { HERO, WHATSAPP_LINK } from "../constants/landing-content";
+import EnrollmentDeadline from "./enrollment-deadline";
 import HeroCarousel from "./hero-carousel";
 import HighlightsMarquee from "./highlights-marquee";
+import MissionTeaser from "./mission-teaser";
 import Reveal from "./reveal";
 
 interface IHeroSectionProps {
@@ -35,13 +37,8 @@ export default function HeroSection({ onOpenSyllabus }: IHeroSectionProps) {
         </Reveal>
 
         <Reveal delay={140}>
-          <h1 className="mt-4 text-landing-display font-heading text-foreground">
-            Taller de electrónica digital para niñas, niños y jóvenes
-          </h1>
-          <p className="mt-3 text-landing-body text-muted-foreground">
-            Desde los 10 años, sin experiencia previa. Cada sesión es una misión: se arma, se
-            programa, se prueba y se rompe hasta que funciona.
-          </p>
+          <h1 className="mt-4 text-landing-display font-heading text-foreground">{HERO.title}</h1>
+          <p className="mt-3 text-landing-body text-muted-foreground">{HERO.subtitle}</p>
         </Reveal>
       </div>
 
@@ -49,7 +46,12 @@ export default function HeroSection({ onOpenSyllabus }: IHeroSectionProps) {
         <HighlightsMarquee />
       </Reveal>
 
-      <Reveal delay={260} className="relative mx-auto mt-7 max-w-3xl px-4">
+      <Reveal delay={240} className="relative mx-auto mt-6 max-w-3xl px-4">
+        {/* La urgencia va pegada al botón, que es donde decide. */}
+        <EnrollmentDeadline />
+      </Reveal>
+
+      <Reveal delay={280} className="relative mx-auto mt-4 max-w-3xl px-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Button size="lg" onClick={onOpenSyllabus}>
             <BookOpen aria-hidden="true" />
@@ -66,6 +68,10 @@ export default function HeroSection({ onOpenSyllabus }: IHeroSectionProps) {
             variant="outline"
           />
         </div>
+      </Reveal>
+
+      <Reveal delay={340} className="relative mx-auto mt-7 max-w-3xl px-4">
+        <MissionTeaser />
       </Reveal>
     </section>
   );
