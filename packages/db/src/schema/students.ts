@@ -31,6 +31,12 @@ export const students = sqliteTable(
     guardianName: text("guardian_name"),
     guardianPhone: text("guardian_phone"),
     notes: text("notes"),
+    /**
+     * Cuándo eligió su PIN. Mientras sea null la contraseña sigue siendo el código de
+     * acceso impreso en la tarjeta y la app obliga a elegir PIN antes de mostrar nada.
+     * El profesor lo vuelve a poner en null al restablecer.
+     */
+    pinSetAt: integer("pin_set_at", { mode: "timestamp_ms" }),
     createdAt: integer("created_at", { mode: "timestamp_ms" }).default(nowMs).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" })
       .default(nowMs)

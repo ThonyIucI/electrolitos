@@ -1,0 +1,1 @@
+ALTER TABLE `students` ADD `pin_set_at` integer;

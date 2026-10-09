@@ -15,12 +15,14 @@ import { badRequest, notFound } from "../lib/errors";
 import { newId } from "../lib/ids";
 import { ok } from "../lib/response";
 import { toEnrollmentResource } from "../lib/serializers";
+import { createStudentUser, resetStudentPin } from "../lib/student-user";
 import { requireStaff } from "../middleware/require-role";
 
 export const ENROLLMENT_ROUTES = {
   LIST: "/courses/:courseId/enrollments",
   CREATE: "/courses/:courseId/enrollments",
   UPDATE: "/enrollments/:enrollmentId",
+  RESET_PIN: "/enrollments/:enrollmentId/reset-pin",
 } as const;
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -160,7 +162,12 @@ export const enrollmentRoutes = new Hono<TAppEnv>()
 
       if ("studentId" in input) {
         const student = await db
-          .select({ id: students.id })
+          .select({
+            id: students.id,
+            userId: students.userId,
+            firstName: students.firstName,
+            lastName: students.lastName,
+          })
           .from(students)
           .where(and(eq(students.id, input.studentId), isNull(students.deletedAt)))
           .get();
@@ -188,10 +195,30 @@ export const enrollmentRoutes = new Hono<TAppEnv>()
           houseId,
           accessCode,
         });
+
+        /* Un alumno que vuelve en otra cohorte ya tiene usuario; solo le falta a quien nunca entró. */
+        if (!student.userId) {
+          const userId = await createStudentUser(context.var.auth, {
+            name: `${student.firstName} ${student.lastName}`,
+            accessCode,
+          });
+
+          await db.update(students).set({ userId }).where(eq(students.id, student.id));
+        }
       } else {
         const studentId = newId();
+
+        /*
+          El usuario se crea antes que la ficha para poder insertarla ya con `user_id`:
+          así nunca queda un alumno a medio enlazar si algo falla después.
+        */
+        const userId = await createStudentUser(context.var.auth, {
+          name: `${input.student.firstName} ${input.student.lastName}`,
+          accessCode,
+        });
+
         await db.batch([
-          db.insert(students).values({ id: studentId, ...input.student }),
+          db.insert(students).values({ id: studentId, userId, ...input.student }),
           db.insert(enrollments).values({
             id: enrollmentId,
             courseId,
@@ -241,4 +268,51 @@ export const enrollmentRoutes = new Hono<TAppEnv>()
 
       return ok(context, await findEnrollmentResource(enrollmentId));
     },
-  );
+  )
+
+  /**
+   * Restablece el PIN del alumno: vuelve a quedar como recién inscrito, entrando con el
+   * código de la tarjeta y eligiendo un PIN nuevo. Es la salida para el «me lo olvidé»,
+   * que a estas edades pasa seguido y no puede depender de un correo.
+   */
+  .post(ENROLLMENT_ROUTES.RESET_PIN, requireStaff, async (context) => {
+    const enrollmentId = context.req.param("enrollmentId");
+    const db = createDb();
+
+    const row = await db
+      .select({
+        accessCode: enrollments.accessCode,
+        studentId: students.id,
+        userId: students.userId,
+        firstName: students.firstName,
+        lastName: students.lastName,
+      })
+      .from(enrollments)
+      .innerJoin(students, eq(students.id, enrollments.studentId))
+      .where(eq(enrollments.id, enrollmentId))
+      .get();
+
+    if (!row) {
+      throw notFound("No encontramos esa inscripción.");
+    }
+
+    /* Inscritos antes de que existiera el ingreso de alumnos todavía no tienen usuario. */
+    const userId =
+      row.userId ??
+      (await createStudentUser(context.var.auth, {
+        name: `${row.firstName} ${row.lastName}`,
+        accessCode: row.accessCode,
+      }));
+
+    if (!row.userId) {
+      await db.update(students).set({ userId }).where(eq(students.id, row.studentId));
+    }
+
+    await resetStudentPin(context.var.auth, {
+      userId,
+      studentId: row.studentId,
+      accessCode: row.accessCode,
+    });
+
+    return ok(context, await findEnrollmentResource(enrollmentId));
+  });

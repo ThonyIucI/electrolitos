@@ -3,6 +3,7 @@ import * as schema from "@electrolitos/db/schema/auth";
 import { env } from "@electrolitos/env/server";
 import { ACCESS_CODE_LENGTH } from "@electrolitos/shared/access-code";
 import { EUserRole } from "@electrolitos/shared/roles";
+import { STUDENT_PIN_LENGTH } from "@electrolitos/shared/student-pin";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { username } from "better-auth/plugins";
@@ -41,7 +42,12 @@ export function createAuth() {
     baseURL: env.BETTER_AUTH_URL,
     trustedOrigins: getTrustedOrigins(),
 
-    emailAndPassword: { enabled: true },
+    /**
+     * El mínimo baja a 4 porque la contraseña del alumno es su PIN. Es un mínimo global
+     * de better-auth, no una política: el staff sigue obligado a 8 caracteres por los
+     * esquemas zod de `internal.ts` y del formulario de ingreso.
+     */
+    emailAndPassword: { enabled: true, minPasswordLength: STUDENT_PIN_LENGTH },
 
     user: {
       additionalFields: {

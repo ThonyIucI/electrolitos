@@ -1,4 +1,5 @@
 import { createDb } from "@electrolitos/db";
+import { user } from "@electrolitos/db/schema/auth";
 import { enrollments } from "@electrolitos/db/schema/students";
 import { ACCESS_CODE_ALPHABET, ACCESS_CODE_LENGTH } from "@electrolitos/shared/access-code";
 import { inArray } from "drizzle-orm";
@@ -16,7 +17,11 @@ const randomAccessCode = (): string => {
 /**
  * Genera `count` códigos únicos, verificando de una sola vez contra los ya usados.
  * Con 32^6 combinaciones la colisión es improbable, pero el código va impreso en una
- * tarjeta y es la contraseña del alumno: conviene comprobarlo.
+ * tarjeta y es la contraseña inicial del alumno: conviene comprobarlo.
+ *
+ * Se mira también `user.username`, no solo las inscripciones: al borrar una inscripción
+ * su código queda libre pero el usuario del alumno sigue existiendo, y reutilizar ese
+ * código chocaría contra el correo sintético que se le armó.
  */
 export const generateAccessCodes = async (count: number): Promise<string[]> => {
   const db = createDb();
@@ -28,13 +33,20 @@ export const generateAccessCodes = async (count: number): Promise<string[]> => {
     }
 
     const candidateList = [...candidates];
-    const taken = await db
-      .select({ accessCode: enrollments.accessCode })
-      .from(enrollments)
-      .where(inArray(enrollments.accessCode, candidateList))
-      .all();
+    const [takenByEnrollment, takenByUser] = await Promise.all([
+      db
+        .select({ code: enrollments.accessCode })
+        .from(enrollments)
+        .where(inArray(enrollments.accessCode, candidateList))
+        .all(),
+      db
+        .select({ code: user.username })
+        .from(user)
+        .where(inArray(user.username, candidateList.map((code) => code.toLowerCase())))
+        .all(),
+    ]);
 
-    if (taken.length === 0) {
+    if (takenByEnrollment.length === 0 && takenByUser.length === 0) {
       return candidateList;
     }
   }

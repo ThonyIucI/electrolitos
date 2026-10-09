@@ -1,57 +1,28 @@
-import { Button } from "@electrolitos/ui/components/button";
-import { Input } from "@electrolitos/ui/components/input";
-import { Label } from "@electrolitos/ui/components/label";
-import { useForm } from "@tanstack/react-form";
-import { useNavigate } from "@tanstack/react-router";
-import { Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck, Sparkles } from "lucide-react";
+import { cn } from "@electrolitos/ui/lib/utils";
+import { GraduationCap, ShieldCheck } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
-import z from "zod";
-
-import { EUserRole } from "@electrolitos/shared/roles";
 
 import Wordmark from "@/components/wordmark";
 import { authClient } from "@/lib/auth-client";
 
 import Loader from "./loader";
+import StaffSignInForm from "./staff-sign-in-form";
+import StudentSignInForm from "./student-sign-in-form";
 
-const MIN_PASSWORD_LENGTH = 8;
+type TSignInMode = "student" | "staff";
 
-/** Acceso de staff (ADMIN/TEACHER) por correo. El de alumno (código) llega en la Etapa 3. */
+const MODES = [
+  { key: "student", label: "Soy alumno", icon: GraduationCap },
+  { key: "staff", label: "Soy profesor", icon: ShieldCheck },
+] as const satisfies readonly { key: TSignInMode; label: string; icon: typeof ShieldCheck }[];
+
+/**
+ * Ingreso de la app. Arranca en «alumno» porque son los muchos: el staff son dos personas
+ * que entran desde una computadora y saben dónde buscar.
+ */
 export default function SignInForm() {
-  const navigate = useNavigate({ from: "/" });
   const { isPending } = authClient.useSession();
-  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-
-  const form = useForm({
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-    onSubmit: async ({ value }) => {
-      await authClient.signIn.email(
-        { email: value.email, password: value.password },
-        {
-          onSuccess: async () => {
-            const session = await authClient.getSession();
-            const isStudent = session.data?.user.role === EUserRole.STUDENT;
-
-            navigate({ to: isStudent ? "/pasaporte" : "/dashboard" });
-            toast.success("Sesión iniciada");
-          },
-          onError: (error) => {
-            toast.error(error.error.message || "No se pudo iniciar sesión.");
-          },
-        },
-      );
-    },
-    validators: {
-      onSubmit: z.object({
-        email: z.email("Correo inválido"),
-        password: z.string().min(MIN_PASSWORD_LENGTH, "La contraseña debe tener al menos 8 caracteres"),
-      }),
-    },
-  });
+  const [mode, setMode] = useState<TSignInMode>("student");
 
   if (isPending) {
     return <Loader />;
@@ -64,120 +35,37 @@ export default function SignInForm() {
       </h1>
 
       <div className="rounded-3xl border-2 border-border bg-card p-6 shadow-sticker-md sm:p-8">
-        <p className="mb-6 inline-flex items-center gap-2 rounded-full bg-secondary px-3.5 py-1.5 font-heading text-sm font-bold text-secondary-foreground">
-          <ShieldCheck className="size-4" />
-          Acceso de profesores
-        </p>
-
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            form.handleSubmit();
-          }}
-          className="space-y-5"
+        <div
+          role="tablist"
+          aria-label="Tipo de ingreso"
+          className="mb-6 grid grid-cols-2 gap-1 rounded-full bg-muted p-1"
         >
-          <form.Field name="email">
-            {(field) => {
-              const hasError = field.state.meta.errors.length > 0;
+          {MODES.map(({ key, label, icon: Icon }) => {
+            const isActive = key === mode;
 
-              return (
-                <div className="space-y-2">
-                  <Label htmlFor={field.name}>Correo</Label>
-                  <div className="relative">
-                    <Mail className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      type="email"
-                      autoComplete="email"
-                      inputMode="email"
-                      placeholder="ingresa tu correo"
-                      aria-invalid={hasError}
-                      className="pl-12"
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(event) => field.handleChange(event.target.value)}
-                    />
-                  </div>
-                  {field.state.meta.errors.map((error) => (
-                    <p key={error?.message} className="text-sm font-bold text-destructive">
-                      {error?.message}
-                    </p>
-                  ))}
-                </div>
-              );
-            }}
-          </form.Field>
-
-          <form.Field name="password">
-            {(field) => {
-              const hasError = field.state.meta.errors.length > 0;
-
-              return (
-                <div className="space-y-2">
-                  <Label htmlFor={field.name}>Contraseña</Label>
-                  <div className="relative">
-                    <Lock className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      type={isPasswordVisible ? "text" : "password"}
-                      autoComplete="current-password"
-                      placeholder="••••••••"
-                      aria-invalid={hasError}
-                      className="px-12"
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(event) => field.handleChange(event.target.value)}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label={isPasswordVisible ? "Ocultar contraseña" : "Mostrar contraseña"}
-                      className="absolute top-1/2 right-2 -translate-y-1/2 text-muted-foreground"
-                      onClick={() => setIsPasswordVisible((visible) => !visible)}
-                    >
-                      {isPasswordVisible ? <EyeOff /> : <Eye />}
-                    </Button>
-                  </div>
-                  {field.state.meta.errors.map((error) => (
-                    <p key={error?.message} className="text-sm font-bold text-destructive">
-                      {error?.message}
-                    </p>
-                  ))}
-                </div>
-              );
-            }}
-          </form.Field>
-
-          <form.Subscribe
-            selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}
-          >
-            {({ canSubmit, isSubmitting }) => (
-              <Button type="submit" size="xl" disabled={!canSubmit || isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="animate-spin motion-reduce:animate-none" />
-                    Ingresando…
-                  </>
-                ) : (
-                  <>
-                    <Sparkles />
-                    Iniciar sesión
-                  </>
+            return (
+              <button
+                key={key}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => setMode(key)}
+                className={cn(
+                  "flex items-center justify-center gap-2 rounded-full px-3 py-2 font-heading text-sm font-bold transition-colors focus-visible:ring-4 focus-visible:ring-ring/40 focus-visible:outline-none",
+                  isActive
+                    ? "bg-card text-foreground shadow-sticker"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
-              </Button>
-            )}
-          </form.Subscribe>
-        </form>
-      </div>
+              >
+                <Icon className="size-4 shrink-0" aria-hidden="true" />
+                {label}
+              </button>
+            );
+          })}
+        </div>
 
-      <p className="mt-6 flex items-center justify-center gap-2 text-center text-base text-muted-foreground">
-        <Sparkles className="size-5 shrink-0 text-spark" />
-        ¿Eres alumno? Tu código de acceso llega muy pronto.
-      </p>
+        {mode === "student" ? <StudentSignInForm /> : <StaffSignInForm />}
+      </div>
     </div>
   );
 }

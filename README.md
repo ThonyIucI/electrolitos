@@ -101,6 +101,59 @@ acceso de 6 caracteres (se usa en la Etapa 3, cuando los alumnos entren con su c
 
 ---
 
+## Ingreso de los alumnos: código + PIN
+
+El chico entra en `/login`, pestaña **Soy alumno**, con dos datos:
+
+| | Qué es | Dónde vive |
+|---|---|---|
+| **Código** | 6 caracteres de la tarjeta. Lo **identifica**, no es secreto | `enrollments.access_code` |
+| **PIN** | 4 dígitos que solo él sabe. Es el **secreto** | Contraseña de better-auth |
+
+**La primera vez deja el PIN vacío**: hasta que elija uno, la contraseña es el propio código,
+y al entrar la app lo manda a `/pin` y no le muestra nada más hasta que lo cree. Desde ese
+momento el código deja de servir como contraseña.
+
+> **Por qué no basta el código solo.** Si el código fuera también la contraseña, saber el
+> usuario sería saber la contraseña: cualquiera que vea la tarjeta entra, y en un salón las
+> tarjetas se prestan y se fotografían. El código identifica, el PIN autentica.
+
+Detalles que conviene no romper:
+
+- `students.pin_set_at` null = todavía entra con el código. Es lo que mira `GET /me`
+  (`mustSetPin`) y lo que fuerza el desvío a `/pin` en `routes/_student/route.tsx`.
+- `POST /me/pin` **exige la credencial actual** (el código la primera vez). Es lo que evita
+  que alguien que agarre el celular desbloqueado le cambie el PIN y lo deje fuera.
+- `/me` devuelve `username: null` para alumnos **a propósito**: su `displayUsername` es el
+  código, o sea su contraseña inicial. El objeto de sesión de better-auth sí lo trae, así
+  que esto reduce la exposición pero no la elimina.
+- `emailAndPassword.minPasswordLength` está en 4 porque la contraseña del alumno es el PIN.
+  Es un mínimo global de better-auth: **el staff sigue obligado a 8** por los esquemas zod
+  de `internal.ts` y del formulario, no lo bajes ahí.
+- El alumno no tiene correo: se le arma uno sintético `<codigo>@alumno.electrolitos.local`
+  solo para cumplir la restricción `NOT NULL UNIQUE` de la tabla. Nunca se le manda nada.
+- `generateAccessCodes` comprueba los códigos libres contra `enrollments` **y** contra
+  `user.username`: al borrar una inscripción el código queda libre pero el usuario no, y
+  reutilizarlo chocaría contra ese correo sintético.
+- `overwriteUserPassword` (en `lib/student-user.ts`) usa `auth.$context`, que es **API
+  interna de better-auth**. Si una actualización rompe el restablecimiento de PIN, el
+  cambio está ahí y en ningún otro sitio.
+
+### Cuando un chico olvida su PIN
+
+Es lo normal a esa edad y no depende de ningún correo: el staff llama a
+
+```
+POST /api/v1/enrollments/:enrollmentId/reset-pin
+```
+
+y el alumno vuelve a entrar con el código de su tarjeta y a elegir un PIN nuevo.
+
+> Todavía **no hay botón** para esto en el panel de alumnos: la ruta existe y está probada,
+> pero hay que cablearla a la ficha del alumno.
+
+---
+
 ## Migraciones
 
 1. Editar el schema en `packages/db/src/schema/*.ts`
@@ -156,8 +209,32 @@ No se lee de corrido: el contenido va en **pestañas** (`constants/landing-tabs.
 lista y `components/landing-panel.tsx` mapea cada una a su sección). Solo se monta la pestaña
 activa, y al cambiarla la barra queda pegada bajo el encabezado.
 
+### Datos con fuente externa
+
+Tres bloques citan datos que no salen del documento informativo. Si alguien los cuestiona,
+las fuentes son estas — y **hay que revisarlas antes de cada campaña**, porque cambian:
+
+| Dónde | Dato | Fuente |
+|---|---|---|
+| `PRICE_REFERENCE` | Taller PUCP, S/ 630 · 12 h · 12–14 años | [ficha de Fabricum](https://fabricum.pucp.edu.pe/capacitate/formacion-continua/taller-en-electronica-digital-para-escolares-12-14-anos/) |
+| `MATERIALS_REFERENCE` | Kits de S/ 70 a S/ 200 | [Naylamp Mechatronics](https://naylampmechatronics.com/130-kits-de-aprendizaje) |
+| `LEADING_COUNTRIES` | Estonia 2012, Finlandia 2016, Japón 2020 | [ProgeTiger](https://www.educationestonia.org/progetiger-programming-school-kindergarten/) · [currículo finlandés](https://www.oph.fi/en/education-and-qualifications/national-core-curriculum-primary-and-lower-secondary-basic-education) · [Nikkei Asia](https://asia.nikkei.com/economy/coding-will-be-mandatory-in-japan-s-primary-schools-from-2020) |
+
+La comparación con la PUCP **lleva siempre su `disclaimer`**: no es el mismo taller (ellos
+hacen compuertas lógicas y simulación, acá se arman circuitos). Sin esa aclaración la
+comparación es deshonesta y además se cae sola ante el primer apoderado que abra la ficha.
+
 Detalles que conviene no romper:
 
+- Los montos son números (`COURSE_PRICE_SOLES`, `PAID_SESSIONS`): el precio por sesión y por
+  hora se **calculan** contra `COURSE_HOURS` del temario, no se escriben a mano. Si cambia el
+  precio o el temario, la tabla comparativa y el desglose se actualizan solos.
+- El aviso de cierre de inscripciones (`utils/enrollment-deadline.ts`) se calcula contra la
+  fecha de hoy a partir de `enrollmentDeadline` de cada sede. Cuando las dos vencen el aviso
+  **desaparece solo**; no hay que acordarse de bajarlo. Las fechas se parsean a mano y no con
+  `new Date("2026-09-19")`, que se interpreta como UTC y en Perú devolvería el día anterior.
+- Los enlaces de WhatsApp van con el mensaje ya escrito (`whatsappLink()`), y cada sede manda
+  el suyo: tener que redactar el mensaje es donde más gente abandona.
 - Escala tipográfica propia (`text-landing-body` 14 px · `text-landing-title` 16 px ·
   `text-landing-display` 20 px), definida en `packages/ui/src/styles/globals.css`. **Solo
   aplica a la portada**; el resto de la app mantiene body 18 px.
