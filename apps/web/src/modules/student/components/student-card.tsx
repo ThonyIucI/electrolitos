@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 import HouseBadge from "@/common/components/house-badge";
 import { houseColorClasses } from "@/common/constants/house-colors";
-import { formatLongDate } from "@/common/utils/format-date";
+import { formatShortDate } from "@/common/utils/format-date";
 import BrandMark from "@/components/brand-mark";
 
 const COPY_FEEDBACK_MS = 1500;
@@ -115,7 +115,7 @@ export default function StudentCard({ card }: IStudentCardProps) {
           <dt className="font-heading text-xs font-bold tracking-widest text-muted-foreground uppercase">
             Agente desde
           </dt>
-          <dd className="mt-1 text-base text-foreground">{formatLongDate(card.enrolledAt)}</dd>
+          <dd className="mt-1 text-base text-foreground">{formatShortDate(card.enrolledAt)}</dd>
         </div>
       </dl>
 

@@ -77,14 +77,39 @@ describe("cursos", () => {
     expect(course.enrollmentCount).toBe(0);
   });
 
-  it("no deja crear un segundo taller mientras haya uno en curso", async () => {
+  /* Desde que hay dos sedes conviven varias cohortes en curso con calendarios distintos. */
+  it("deja crear una segunda cohorte en paralelo", async () => {
     await createCourse(cookie);
 
-    const response = await postJson("/api/v1/courses", NEW_COURSE, { cookie });
-    const body = await response.json<IEnvelope<null>>();
+    const response = await postJson(
+      "/api/v1/courses",
+      { ...NEW_COURSE, name: "Taller de electrónica — Ventarrones" },
+      { cookie },
+    );
 
-    expect(response.status).toBe(409);
-    expect(body.error).toBe("Ya hay un taller en curso.");
+    expect(response.status).toBe(201);
+
+    const list = await request("/api/v1/courses", { headers: { cookie } });
+    const body = await list.json<IEnvelope<ICourseDetailResource[]>>();
+
+    expect(body.data).toHaveLength(2);
+  });
+
+  it("renombra el taller sin tocar su slug", async () => {
+    const { course } = await createCourse(cookie);
+
+    const response = await request(`/api/v1/courses/${course.id}`, {
+      method: "PATCH",
+      headers: { ...JSON_HEADERS, cookie },
+      body: JSON.stringify({ name: "Taller de electrónica — Samán" }),
+    });
+    const body = await response.json<IEnvelope<ICourseDetailResource>>();
+
+    expect(response.status).toBe(200);
+    expect(body.data.name).toBe("Taller de electrónica — Samán");
+    expect(body.data.slug).toBe(course.slug);
+    /* Lo que no se manda no se toca. */
+    expect(body.data.capacity).toBe(NEW_COURSE.capacity);
   });
 });
 

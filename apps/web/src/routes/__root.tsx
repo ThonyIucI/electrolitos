@@ -42,9 +42,16 @@ function RootComponent() {
         enableSystem
         storageKey="vite-ui-theme"
       >
+        {/*
+          `Header` renderiza también la barra inferior de móvil, que va `fixed` y por eso
+          no cuenta como fila de la grilla. El `pb-20` del contenido es para que la última
+          línea de cada página no quede debajo de esa barra.
+        */}
         <div className="grid min-h-svh grid-rows-[auto_1fr]">
           <Header />
-          <Outlet />
+          <div className="min-w-0 pb-20 sm:pb-0">
+            <Outlet />
+          </div>
         </div>
         <Toaster richColors />
       </ThemeProvider>

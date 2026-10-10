@@ -99,11 +99,21 @@ apunta a la URL del Worker y no hay proxy. Las cookies son `Lax` en HTTP local y
 
 ---
 
-### Crear el taller y registrar alumnos
+### Talleres, cohortes y alumnos
 
-La primera vez que entres a **Alumnos** no habrá ningún taller: la pantalla te ofrece crearlo
-con los datos ya rellenados. Al crearlo aparecen también las cuatro casas de la chakana
-(Paulet, Antúnez, Villarreal y Reiche). Desde ahí puedes inscribir chicos.
+Cada sede o promoción es una **cohorte** distinta, con su propio calendario, su propio cupo
+y sus propios inscritos. Se gestionan en **Talleres** (`/cursos`): crear, renombrar, mover
+fechas, cambiar cupo y precio, y marcarlas como terminadas. Al crear una aparecen también
+sus cuatro casas de la chakana (Paulet, Antúnez, Villarreal y Reiche).
+
+> **Pueden convivir varias cohortes en curso.** Antes el servidor rechazaba la segunda con
+> un 409; se quitó al abrir Ventarrones. Por eso el panel trabaja con `GET /courses` y no
+> con «el taller activo», y **Alumnos** muestra un selector de cohorte cuando hay más de una.
+> `GET /courses/active` sigue existiendo, pero devuelve solo la primera: no lo uses para
+> pantallas nuevas.
+
+Al renombrar **no se regenera el `slug`**: es un identificador estable y volver a derivarlo
+del nombre solo serviría para chocar contra su índice único.
 
 Para registrar rápido en clase basta **nombre y apellido**; la casa, el apoderado y la fecha
 de nacimiento son opcionales y se completan después. Cada inscripción genera su código de

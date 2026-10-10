@@ -1,6 +1,6 @@
-import { CAMPUSES, type ICampus } from "../constants/landing-campuses";
+import dayjs from "dayjs";
 
-const MS_PER_DAY = 86_400_000;
+import { CAMPUSES, type ICampus } from "../constants/landing-campuses";
 
 export interface IOpenCampus {
   campus: ICampus;
@@ -8,21 +8,12 @@ export interface IOpenCampus {
   daysLeft: number;
 }
 
-const startOfDay = (date: Date): number =>
-  new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
-
-/*
-  La fecha se parte a mano en lugar de `new Date("2026-09-19")`: ese formato se interpreta
-  como UTC y en Perú (UTC-5) devolvería el día anterior.
-*/
-const parseIsoDate = (isoDate: string): number => {
-  const [year, month, day] = isoDate.split("-").map(Number);
-
-  return new Date(year, month - 1, day).getTime();
-};
-
+/**
+ * Se compara contra el inicio del día en hora local: a las 11 de la noche del día del
+ * cierre el plazo sigue abierto, no vencido desde el mediodía por la diferencia con UTC.
+ */
 export const daysUntil = (isoDate: string, now: Date = new Date()): number =>
-  Math.round((parseIsoDate(isoDate) - startOfDay(now)) / MS_PER_DAY);
+  dayjs(isoDate).startOf("day").diff(dayjs(now).startOf("day"), "day");
 
 /**
  * Sedes cuyo plazo de inscripción sigue abierto, de la más urgente a la menos.

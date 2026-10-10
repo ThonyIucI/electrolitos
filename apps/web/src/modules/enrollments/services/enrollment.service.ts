@@ -1,3 +1,4 @@
+import type { TCourseStatus } from "@electrolitos/shared/courses";
 import type {
   ICourseDetailResource,
   IEnrollmentResource,
@@ -23,12 +24,18 @@ export interface ICreateStudentPayload {
   notes?: string | null;
 }
 
-/** `null` cuando todavía no se ha creado ningún taller. */
-export const getActiveCourseRequest = (signal?: AbortSignal) =>
-  apiRequest<ICourseDetailResource | null>("/courses/active", { signal });
+/** Todas las cohortes, de la más nueva a la más vieja. */
+export const listCoursesRequest = (signal?: AbortSignal) =>
+  apiRequest<ICourseDetailResource[]>("/courses", { signal });
 
 export const createCourseRequest = (payload: ICreateCoursePayload) =>
   apiRequest<ICourseDetailResource>("/courses", { method: "POST", body: payload });
+
+/** Todo opcional: se manda solo lo que cambió. */
+export type TUpdateCoursePayload = Partial<ICreateCoursePayload> & { status?: TCourseStatus };
+
+export const updateCourseRequest = (courseId: string, payload: TUpdateCoursePayload) =>
+  apiRequest<ICourseDetailResource>(`/courses/${courseId}`, { method: "PATCH", body: payload });
 
 export const listEnrollmentsRequest = (courseId: string, signal?: AbortSignal) =>
   apiRequest<IEnrollmentResource[]>(`/courses/${courseId}/enrollments`, { signal });
