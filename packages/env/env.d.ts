@@ -13,6 +13,11 @@ export interface CloudflareEnv {
   CORS_ORIGIN: string;
   /** Token para el endpoint interno de seed del admin */
   SEED_TOKEN: string;
+  /**
+   * `"true"` apaga el rate limit de better-auth. **Solo para los tests**, que hacen más
+   * de 10 ingresos por archivo. No existe en `wrangler.jsonc` ni en producción.
+   */
+  DISABLE_RATE_LIMIT?: string;
 }
 
 declare global {

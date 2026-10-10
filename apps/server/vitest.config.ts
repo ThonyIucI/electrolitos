@@ -19,9 +19,15 @@ export default defineConfig(async () => {
           bindings: {
             TEST_MIGRATIONS: migrations,
             BETTER_AUTH_SECRET: "test-secret-test-secret-test-secret-1234",
-            BETTER_AUTH_URL: "http://localhost:3001",
-            CORS_ORIGIN: "http://localhost:3000",
+            BETTER_AUTH_URL: "http://localhost:3009",
+            CORS_ORIGIN: "http://localhost:3008",
             SEED_TOKEN: "test-seed-token",
+            /*
+              El rate limit guarda el contador en un `Map` de módulo que sobrevive a todo
+              el archivo de tests, y el de ingreso del alumno hace más de 10 logins. Se
+              apaga solo acá: en producción esta variable no existe.
+            */
+            DISABLE_RATE_LIMIT: "true",
           },
         },
       }),

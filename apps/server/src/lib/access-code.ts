@@ -16,8 +16,8 @@ const randomAccessCode = (): string => {
 
 /**
  * Genera `count` códigos únicos, verificando de una sola vez contra los ya usados.
- * Con 32^6 combinaciones la colisión es improbable, pero el código va impreso en una
- * tarjeta y es la contraseña inicial del alumno: conviene comprobarlo.
+ * Con 32^6 combinaciones la colisión es improbable, pero el código identifica al alumno
+ * y es su contraseña inicial: conviene comprobarlo igual.
  *
  * Se mira también `user.username`, no solo las inscripciones: al borrar una inscripción
  * su código queda libre pero el usuario del alumno sigue existiendo, y reutilizar ese

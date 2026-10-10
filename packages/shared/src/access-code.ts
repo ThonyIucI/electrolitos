@@ -1,6 +1,6 @@
 /**
  * Código de acceso del alumno: 6 caracteres de un alfabeto sin ambigüedades
- * (sin 0/O ni 1/I) para que se lea bien impreso en la tarjeta.
+ * (sin 0/O ni 1/I) para que no se confunda al dictarlo, copiarlo o leerlo en pantalla.
  */
 export const ACCESS_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 export const ACCESS_CODE_LENGTH = 6;

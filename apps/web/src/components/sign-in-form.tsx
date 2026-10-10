@@ -9,6 +9,11 @@ import Loader from "./loader";
 import StaffSignInForm from "./staff-sign-in-form";
 import StudentSignInForm from "./student-sign-in-form";
 
+interface ISignInFormProps {
+  /** Código que venía en el enlace de WhatsApp, si lo había. */
+  initialCode?: string;
+}
+
 type TSignInMode = "student" | "staff";
 
 const MODES = [
@@ -20,7 +25,7 @@ const MODES = [
  * Ingreso de la app. Arranca en «alumno» porque son los muchos: el staff son dos personas
  * que entran desde una computadora y saben dónde buscar.
  */
-export default function SignInForm() {
+export default function SignInForm({ initialCode }: ISignInFormProps) {
   const { isPending } = authClient.useSession();
   const [mode, setMode] = useState<TSignInMode>("student");
 
@@ -64,7 +69,11 @@ export default function SignInForm() {
           })}
         </div>
 
-        {mode === "student" ? <StudentSignInForm /> : <StaffSignInForm />}
+        {mode === "student" ? (
+          <StudentSignInForm initialCode={initialCode} />
+        ) : (
+          <StaffSignInForm />
+        )}
       </div>
     </div>
   );

@@ -43,6 +43,15 @@ export const enrollNewStudentRequest = (
     body: { student, houseId },
   });
 
+/**
+ * Le da al alumno un código nuevo y le borra el PIN. Devuelve la inscripción ya
+ * actualizada, con el código nuevo listo para copiar y enviar.
+ */
+export const regenerateAccessCodeRequest = (enrollmentId: string) =>
+  apiRequest<IEnrollmentResource>(`/enrollments/${enrollmentId}/regenerate-code`, {
+    method: "POST",
+  });
+
 export const updateEnrollmentRequest = (
   enrollmentId: string,
   payload: { houseId?: string | null },

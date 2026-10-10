@@ -4,8 +4,8 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
-const WEB_PORT = 3000;
-const LOCAL_API_URL = "http://localhost:3001";
+const WEB_PORT = 3008;
+const LOCAL_API_URL = "http://localhost:3009";
 const LOCAL_WEB_ORIGIN = `http://localhost:${WEB_PORT}`;
 
 export default defineConfig({
@@ -19,7 +19,7 @@ export default defineConfig({
         target: LOCAL_API_URL,
         changeOrigin: true,
         // better-auth valida el header Origin contra trustedOrigins; lo normalizamos
-        // para que una visita desde http://192.168.x.x:3001 se vea como localhost.
+        // para que una visita desde http://192.168.x.x:3008 se vea como localhost.
         headers: { origin: LOCAL_WEB_ORIGIN },
       },
     },

@@ -8,7 +8,7 @@
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
   "preview_urls": false,
-  "dev": { "port": 3001 },
+  "dev": { "port": 3009 },
 
   // Variables NO secretas de producción. En local las pisa `.dev.vars`.
   // Dominio propio (electrolitos.* sobre gaiamundo.com) — ver planning/CLOUDFLARE_SETUP.md.

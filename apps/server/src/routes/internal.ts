@@ -29,7 +29,7 @@ const seedAdminSchema = z.object({
  * Crea el primer ADMIN. Protegido por el secret `SEED_TOKEN`. Idempotente: si ya existe
  * un usuario con ese correo, solo asegura que tenga rol ADMIN.
  *
- * Uso local:  curl -X POST localhost:3000/api/v1/internal/seed-admin \
+ * Uso local:  curl -X POST localhost:3009/api/v1/internal/seed-admin \
  *               -H "x-seed-token: $SEED_TOKEN" -H "content-type: application/json" \
  *               -d '{"email":"...","password":"...","name":"Thony"}'
  */

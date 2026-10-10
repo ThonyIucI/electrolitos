@@ -1,9 +1,15 @@
-import type { ICourseDetailResource, IEnrollmentResource } from "@electrolitos/shared/resources";
+import { isValidAccessCode } from "@electrolitos/shared/access-code";
+import type {
+  ICourseDetailResource,
+  IEnrollmentResource,
+  IStudentCardResource,
+} from "@electrolitos/shared/resources";
+import { env } from "cloudflare:workers";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { postJson, request, resetDomainTables, signInAsAdmin } from "./helpers";
 
-/** Una sola sesión de staff para todo el archivo: el login tiene rate limit de 10/min. */
+/** Una sola sesión de staff para todo el archivo. El rate limit va apagado en pruebas. */
 let cookie = "";
 
 beforeAll(async () => {
@@ -63,6 +69,92 @@ const getMe = async (sessionCookie: string) => {
   return body.data;
 };
 
+const getCard = async (sessionCookie: string) => {
+  const response = await request("/api/v1/me/card", { headers: { cookie: sessionCookie } });
+  const body = await response.json<IEnvelope<IStudentCardResource>>();
+
+  return { response, card: body.data };
+};
+
+const getAccessStatus = async (codigo: string) => {
+  const response = await request(`/api/v1/access/status?codigo=${encodeURIComponent(codigo)}`);
+  const body = await response.json<IEnvelope<{ status: string }>>();
+
+  return body.data.status;
+};
+
+/*
+  Este endpoint es lo que decide si al chico se le pide el PIN o se le deja crear uno, y
+  es público: lo importante es que `needs-pin` sea el cajón de sastre, para que de la
+  respuesta no se pueda deducir qué códigos existen.
+*/
+describe("qué le toca a un código", () => {
+  it("manda a crear el PIN cuando el alumno todavía no tiene uno", async () => {
+    const enrollment = await enrollOneStudent();
+
+    expect(await getAccessStatus(enrollment.accessCode)).toBe("needs-setup");
+  });
+
+  it("lo acepta en minúsculas y con guion, como llega pegado de WhatsApp", async () => {
+    const enrollment = await enrollOneStudent();
+    const sucio = `${enrollment.accessCode.slice(0, 3)}-${enrollment.accessCode.slice(3)}`;
+
+    expect(await getAccessStatus(sucio.toLowerCase())).toBe("needs-setup");
+  });
+
+  it("pide el PIN una vez que el alumno lo creó", async () => {
+    const enrollment = await enrollOneStudent();
+    const { cookie: studentCookie } = await signInAsStudent(
+      enrollment.accessCode,
+      enrollment.accessCode,
+    );
+    await postJson("/api/v1/me/pin", { pin: "7391" }, { cookie: studentCookie });
+
+    expect(await getAccessStatus(enrollment.accessCode)).toBe("needs-pin");
+  });
+
+  it("responde igual para un código que no existe o está mal escrito", async () => {
+    expect(await getAccessStatus("ZZZZZZ")).toBe("needs-pin");
+    expect(await getAccessStatus("no-es-un-codigo")).toBe("needs-pin");
+  });
+
+  /*
+    Devolver `needs-pin` a una inscripción sin cuenta la dejaba pidiendo un PIN que no
+    existe, sin salida. Hay dos formas de llegar a ese estado y las dos se completan en
+    el primer intento de entrar.
+  */
+  it("le crea la cuenta a la inscripción vieja, que no tiene usuario ninguno", async () => {
+    const enrollment = await enrollOneStudent();
+    /* `students.user_id` es ON DELETE SET NULL, así que borrar el usuario lo desenlaza. */
+    await env.DB.prepare("DELETE FROM user WHERE role = 'STUDENT'").run();
+
+    expect(await getAccessStatus(enrollment.accessCode)).toBe("needs-setup");
+
+    const { response } = await signInAsStudent(enrollment.accessCode, enrollment.accessCode);
+    expect(response.status).toBe(200);
+  });
+
+  it("reutiliza la cuenta que quedó creada pero sin enlazar", async () => {
+    const enrollment = await enrollOneStudent();
+    await env.DB.prepare("UPDATE students SET user_id = NULL").run();
+
+    expect(await getAccessStatus(enrollment.accessCode)).toBe("needs-setup");
+
+    const { response } = await signInAsStudent(enrollment.accessCode, enrollment.accessCode);
+    expect(response.status).toBe(200);
+  });
+
+  it("no vuelve a crear la cuenta si ya la tiene", async () => {
+    const enrollment = await enrollOneStudent();
+
+    expect(await getAccessStatus(enrollment.accessCode)).toBe("needs-setup");
+    expect(await getAccessStatus(enrollment.accessCode)).toBe("needs-setup");
+
+    const { response } = await signInAsStudent(enrollment.accessCode, enrollment.accessCode);
+    expect(response.status).toBe(200);
+  });
+});
+
 describe("ingreso del alumno", () => {
   it("entra con el código de la tarjeta y queda obligado a elegir PIN", async () => {
     const enrollment = await enrollOneStudent();
@@ -79,16 +171,20 @@ describe("ingreso del alumno", () => {
     expect(me.mustSetPin).toBe(true);
   });
 
-  it("nunca devuelve el código de acceso en /me, porque es su contraseña inicial", async () => {
+  /* Las dos comprobaciones van juntas para no abrir una sesión más de la necesaria. */
+  it("no expone el código mientras siga siendo la contraseña, ni en /me ni en el carnet", async () => {
     const enrollment = await enrollOneStudent();
     const { cookie: studentCookie } = await signInAsStudent(
       enrollment.accessCode,
       enrollment.accessCode,
     );
 
-    const me = await getMe(studentCookie);
+    expect((await getMe(studentCookie)).username).toBeNull();
 
-    expect(me.username).toBeNull();
+    const { response, card } = await getCard(studentCookie);
+    expect(response.status).toBe(200);
+    expect(card.accessCode).toBeNull();
+    expect(card.fullName).toBe("Luz Quispe");
   });
 
   it("rechaza un código que no existe sin decir que no existe", async () => {
@@ -108,12 +204,17 @@ describe("elección del PIN", () => {
 
     const setPin = await postJson(
       "/api/v1/me/pin",
-      { currentCredential: enrollment.accessCode, pin: "7391" },
+      { pin: "7391" },
       { cookie: studentCookie },
     );
 
     expect(setPin.status).toBe(200);
     expect((await getMe(studentCookie)).mustSetPin).toBe(false);
+
+    /* Con la cuenta ya protegida por el PIN, el carnet sí puede mostrar el código. */
+    const { card } = await getCard(studentCookie);
+    expect(card.accessCode).toBe(enrollment.accessCode);
+    expect(card.courseName).toBe(NEW_COURSE.name);
 
     const withOldCode = await signInAsStudent(enrollment.accessCode, enrollment.accessCode);
     expect(withOldCode.response.status).not.toBe(200);
@@ -131,73 +232,100 @@ describe("elección del PIN", () => {
 
     const response = await postJson(
       "/api/v1/me/pin",
-      { currentCredential: enrollment.accessCode, pin: "1234" },
+      { pin: "1234" },
       { cookie: studentCookie },
     );
 
     expect(response.status).toBe(400);
   });
 
-  it("exige la credencial actual para que una sesión ajena no deje al chico fuera", async () => {
+  /*
+    Crear el primer PIN no pide nada más, pero cambiarlo sí: es lo que impide que alguien
+    agarre el celular desbloqueado y deje al chico fuera de su propia cuenta.
+  */
+  it("para cambiar un PIN ya creado exige el actual", async () => {
     const enrollment = await enrollOneStudent();
     const { cookie: studentCookie } = await signInAsStudent(
       enrollment.accessCode,
       enrollment.accessCode,
     );
 
-    const response = await postJson(
+    await postJson("/api/v1/me/pin", { pin: "7391" }, { cookie: studentCookie });
+
+    const sinActual = await postJson("/api/v1/me/pin", { pin: "8264" }, { cookie: studentCookie });
+    expect(sinActual.status).toBe(400);
+
+    const conActualMalo = await postJson(
       "/api/v1/me/pin",
-      { currentCredential: "XXXXXX", pin: "7391" },
+      { currentPin: "0000", pin: "8264" },
       { cookie: studentCookie },
     );
-    const body = await response.json<IEnvelope<null>>();
+    const body = await conActualMalo.json<IEnvelope<null>>();
+    expect(conActualMalo.status).toBe(401);
+    expect(body.error).toBe("Tu PIN actual no es correcto.");
 
-    expect(response.status).toBe(401);
-    expect(body.error).toBe("Tu código o PIN actual no es correcto.");
+    const conActualBueno = await postJson(
+      "/api/v1/me/pin",
+      { currentPin: "7391", pin: "8264" },
+      { cookie: studentCookie },
+    );
+    expect(conActualBueno.status).toBe(200);
+  });
+
+  it("el carnet es solo del alumno: el staff no entra por ahí", async () => {
+    await enrollOneStudent();
+
+    const response = await request("/api/v1/me/card", { headers: { cookie } });
+
+    expect(response.status).toBe(403);
   });
 
   it("el staff no puede tocar el PIN de un alumno por esta vía", async () => {
     await enrollOneStudent();
 
-    const response = await postJson(
-      "/api/v1/me/pin",
-      { currentCredential: "lo-que-sea", pin: "7391" },
-      { cookie },
-    );
+    const response = await postJson("/api/v1/me/pin", { pin: "7391" }, { cookie });
 
     expect(response.status).toBe(403);
   });
 });
 
-describe("restablecer el PIN", () => {
-  it("devuelve al alumno a entrar con su código y a elegir PIN de nuevo", async () => {
+describe("código nuevo", () => {
+  it("mata el código viejo, borra el PIN y deja intacto al alumno", async () => {
     const enrollment = await enrollOneStudent();
     const { cookie: firstCookie } = await signInAsStudent(
       enrollment.accessCode,
       enrollment.accessCode,
     );
-    await postJson(
-      "/api/v1/me/pin",
-      { currentCredential: enrollment.accessCode, pin: "7391" },
-      { cookie: firstCookie },
-    );
+    await postJson("/api/v1/me/pin", { pin: "7391" }, { cookie: firstCookie });
 
-    const reset = await postJson(`/api/v1/enrollments/${enrollment.id}/reset-pin`, {}, { cookie });
-    expect(reset.status).toBe(200);
-
-    const { response, cookie: studentCookie } = await signInAsStudent(
-      enrollment.accessCode,
-      enrollment.accessCode,
+    const response = await postJson(
+      `/api/v1/enrollments/${enrollment.id}/regenerate-code`,
+      {},
+      { cookie },
     );
+    const { data: updated } = await response.json<IEnvelope<IEnrollmentResource>>();
 
     expect(response.status).toBe(200);
-    expect((await getMe(studentCookie)).mustSetPin).toBe(true);
+    expect(updated.accessCode).not.toBe(enrollment.accessCode);
+    expect(isValidAccessCode(updated.accessCode)).toBe(true);
+
+    /* Lo que importa del cambio: solo son credenciales nuevas, no un alumno nuevo. */
+    expect(updated.id).toBe(enrollment.id);
+    expect(updated.student.id).toBe(enrollment.student.id);
+    expect(updated.student.firstName).toBe(enrollment.student.firstName);
+
+    const conCodigoViejo = await signInAsStudent(enrollment.accessCode, enrollment.accessCode);
+    expect(conCodigoViejo.response.status).not.toBe(200);
+
+    const conCodigoNuevo = await signInAsStudent(updated.accessCode, updated.accessCode);
+    expect(conCodigoNuevo.response.status).toBe(200);
+    expect((await getMe(conCodigoNuevo.cookie)).mustSetPin).toBe(true);
   });
 
-  it("solo el staff puede restablecerlo", async () => {
+  it("solo el staff puede generarlo", async () => {
     const enrollment = await enrollOneStudent();
 
-    const response = await postJson(`/api/v1/enrollments/${enrollment.id}/reset-pin`, {});
+    const response = await postJson(`/api/v1/enrollments/${enrollment.id}/regenerate-code`, {});
 
     expect(response.status).toBe(401);
   });

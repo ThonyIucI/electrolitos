@@ -8,6 +8,7 @@ import { logger } from "hono/logger";
 import type { TAppEnv } from "./lib/app-env";
 import { AppError } from "./lib/errors";
 import { fail } from "./lib/response";
+import { accessRoutes } from "./routes/access";
 import { courseRoutes } from "./routes/courses";
 import { enrollmentRoutes } from "./routes/enrollments";
 import { healthRoutes } from "./routes/health";
@@ -47,6 +48,7 @@ app.get("/", (context) => context.text("Electrolitos API"));
 app
   .basePath(API_PREFIX)
   .route("/", healthRoutes)
+  .route("/", accessRoutes)
   .route("/", meRoutes)
   .route("/", courseRoutes)
   .route("/", enrollmentRoutes)

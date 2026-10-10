@@ -91,6 +91,7 @@ function StudentsPage() {
                   enrollment={enrollment}
                   houses={course.houses}
                   onAssignHouse={Enrollments.assignHouse}
+                  onRegenerateCode={Enrollments.regenerateCode}
                 />
               ))}
             </ul>

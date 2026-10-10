@@ -9,8 +9,21 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { username } from "better-auth/plugins";
 
 const DAY_IN_SECONDS = 60 * 60 * 24;
-const SESSION_DAYS = 30;
-const LOGIN_MAX_ATTEMPTS_PER_MINUTE = 10;
+
+/**
+ * La sesión caduca a los 7 días **sin usarla**, no a los 7 días a secas: `updateAge` la
+ * renueva como mucho una vez al día mientras el chico entre. O sea que entra directo
+ * siempre, y solo se le vuelve a pedir el PIN si pasó una semana entera sin aparecer
+ * — o si cerró sesión a propósito.
+ */
+const SESSION_DAYS = 7;
+/**
+ * El cupo se cuenta por IP, y un salón entero sale por la misma: con 18 chicos entrando
+ * a la vez, y dos intentos cada uno (primero el código, después el PIN), un tope de 10
+ * dejaría fuera a medio taller. Con 60/min y 32^6 combinaciones posibles, adivinar un
+ * código al azar seguiría tomando miles de años.
+ */
+const LOGIN_MAX_ATTEMPTS_PER_MINUTE = 60;
 
 /** `CORS_ORIGIN` admite varios orígenes separados por coma. */
 export const getTrustedOrigins = (): string[] =>
@@ -65,8 +78,14 @@ export function createAuth() {
       updateAge: DAY_IN_SECONDS,
     },
 
+    /*
+      El contador vive en un `Map` de módulo, así que sobrevive a que `createAuth()` se
+      llame por request — pero es por isolate, no global: en Workers el límite efectivo es
+      10/min por cada isolate vivo. Frena el tanteo de códigos, no un ataque repartido.
+      Para eso haría falta una regla WAF en Cloudflare.
+    */
     rateLimit: {
-      enabled: true,
+      enabled: env.DISABLE_RATE_LIMIT !== "true",
       customRules: {
         "/sign-in/username": { window: 60, max: LOGIN_MAX_ATTEMPTS_PER_MINUTE },
         "/sign-in/email": { window: 60, max: LOGIN_MAX_ATTEMPTS_PER_MINUTE },

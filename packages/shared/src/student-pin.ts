@@ -1,8 +1,8 @@
 /**
  * PIN del alumno: 4 dígitos que reemplazan al código de acceso como contraseña.
  *
- * El código va impreso en la tarjeta, así que sirve para identificar pero no para
- * guardar un secreto: cualquiera que vea la tarjeta entraría. El PIN lo elige el chico
+ * El código se envía por WhatsApp, así que sirve para identificar pero no para guardar
+ * un secreto: cualquiera que lo vea reenviado entraría. El PIN lo elige el chico
  * en su primer ingreso y solo él lo sabe; si se le olvida, el profesor lo restablece.
  */
 export const STUDENT_PIN_LENGTH = 4;

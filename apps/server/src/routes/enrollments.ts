@@ -15,14 +15,14 @@ import { badRequest, notFound } from "../lib/errors";
 import { newId } from "../lib/ids";
 import { ok } from "../lib/response";
 import { toEnrollmentResource } from "../lib/serializers";
-import { createStudentUser, resetStudentPin } from "../lib/student-user";
+import { createStudentUser, ensureStudentUser, regenerateStudentAccess } from "../lib/student-user";
 import { requireStaff } from "../middleware/require-role";
 
 export const ENROLLMENT_ROUTES = {
   LIST: "/courses/:courseId/enrollments",
   CREATE: "/courses/:courseId/enrollments",
   UPDATE: "/enrollments/:enrollmentId",
-  RESET_PIN: "/enrollments/:enrollmentId/reset-pin",
+  REGENERATE_CODE: "/enrollments/:enrollmentId/regenerate-code",
 } as const;
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -271,11 +271,13 @@ export const enrollmentRoutes = new Hono<TAppEnv>()
   )
 
   /**
-   * Restablece el PIN del alumno: vuelve a quedar como recién inscrito, entrando con el
-   * código de la tarjeta y eligiendo un PIN nuevo. Es la salida para el «me lo olvidé»,
-   * que a estas edades pasa seguido y no puede depender de un correo.
+   * Le genera al alumno un código nuevo y le borra el PIN. Es la salida para el «me lo
+   * olvidé», que a estas edades pasa seguido y no puede depender de un correo.
+   *
+   * Solo cambian las credenciales: su inscripción, su casa, su asistencia y su XP siguen
+   * colgando de `enrollment_id`, así que vuelve a entrar y encuentra todo tal como estaba.
    */
-  .post(ENROLLMENT_ROUTES.RESET_PIN, requireStaff, async (context) => {
+  .post(ENROLLMENT_ROUTES.REGENERATE_CODE, requireStaff, async (context) => {
     const enrollmentId = context.req.param("enrollmentId");
     const db = createDb();
 
@@ -299,7 +301,7 @@ export const enrollmentRoutes = new Hono<TAppEnv>()
     /* Inscritos antes de que existiera el ingreso de alumnos todavía no tienen usuario. */
     const userId =
       row.userId ??
-      (await createStudentUser(context.var.auth, {
+      (await ensureStudentUser(context.var.auth, {
         name: `${row.firstName} ${row.lastName}`,
         accessCode: row.accessCode,
       }));
@@ -308,10 +310,10 @@ export const enrollmentRoutes = new Hono<TAppEnv>()
       await db.update(students).set({ userId }).where(eq(students.id, row.studentId));
     }
 
-    await resetStudentPin(context.var.auth, {
+    await regenerateStudentAccess(context.var.auth, {
       userId,
       studentId: row.studentId,
-      accessCode: row.accessCode,
+      enrollmentId,
     });
 
     return ok(context, await findEnrollmentResource(enrollmentId));

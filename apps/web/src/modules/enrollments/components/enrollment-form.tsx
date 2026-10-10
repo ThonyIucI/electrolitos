@@ -98,7 +98,7 @@ export default function EnrollmentForm({ houses, onSubmit }: IEnrollmentFormProp
                 name={field.name}
                 autoComplete="off"
                 autoCapitalize="words"
-                placeholder="Luz"
+                placeholder="Ingresa el nombre"
                 aria-invalid={field.state.meta.errors.length > 0}
                 value={field.state.value}
                 onBlur={field.handleBlur}
@@ -122,7 +122,7 @@ export default function EnrollmentForm({ houses, onSubmit }: IEnrollmentFormProp
                 name={field.name}
                 autoComplete="off"
                 autoCapitalize="words"
-                placeholder="Quispe"
+                placeholder="Ingresa el apellido"
                 aria-invalid={field.state.meta.errors.length > 0}
                 value={field.state.value}
                 onBlur={field.handleBlur}
@@ -193,7 +193,7 @@ export default function EnrollmentForm({ houses, onSubmit }: IEnrollmentFormProp
                 <Input
                   id={field.name}
                   name={field.name}
-                  placeholder="Cómo le dicen"
+                  placeholder="Ingresa el apodo"
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(event) => field.handleChange(event.target.value)}
@@ -226,7 +226,7 @@ export default function EnrollmentForm({ houses, onSubmit }: IEnrollmentFormProp
                   id={field.name}
                   name={field.name}
                   autoCapitalize="words"
-                  placeholder="Mamá, papá o tutor"
+                  placeholder="Ingresa el nombre del apoderado"
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(event) => field.handleChange(event.target.value)}
@@ -244,7 +244,7 @@ export default function EnrollmentForm({ houses, onSubmit }: IEnrollmentFormProp
                   name={field.name}
                   type="tel"
                   inputMode="tel"
-                  placeholder="987654321"
+                  placeholder="Ingresa el teléfono"
                   aria-invalid={field.state.meta.errors.length > 0}
                   value={field.state.value}
                   onBlur={field.handleBlur}

@@ -67,7 +67,7 @@ export default function StaffSignInForm() {
                   type="email"
                   autoComplete="email"
                   inputMode="email"
-                  placeholder="ingresa tu correo"
+                  placeholder="Ingresa tu correo"
                   aria-invalid={hasError}
                   className="pl-12"
                   value={field.state.value}
@@ -99,7 +99,7 @@ export default function StaffSignInForm() {
                   name={field.name}
                   type={isPasswordVisible ? "text" : "password"}
                   autoComplete="current-password"
-                  placeholder="••••••••"
+                  placeholder="Ingresa tu contraseña"
                   aria-invalid={hasError}
                   className="px-12"
                   value={field.state.value}

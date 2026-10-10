@@ -1,24 +1,23 @@
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
+import { useState } from "react";
 
 import { EUserRole, parseUserRole } from "@electrolitos/shared/roles";
 
 import { ApiError } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
+import PinDialog from "@/modules/student/components/pin-dialog";
 import { getMeRequest } from "@/modules/student/services/student.service";
-
-const SET_PIN_PATH = "/pin";
-const PASSPORT_PATH = "/pasaporte";
 
 /**
  * Layout para ALUMNO. Sin sesión → /login. Staff logueado → /dashboard.
  *
- * Además fuerza el paso por /pin: mientras el chico no elija su PIN sigue entrando con el
- * código impreso en la tarjeta, que cualquiera que la vea puede usar. Hasta entonces no
- * se le muestra nada más.
+ * Si todavía no eligió su PIN, se le muestra la ventana de creación encima de todo apenas
+ * entra: hasta ese momento su contraseña es el código que le enviaron, que cualquiera que
+ * lo haya visto puede usar. La ventana no se puede cerrar.
  */
 export const Route = createFileRoute("/_student")({
   component: StudentLayout,
-  beforeLoad: async ({ location }) => {
+  beforeLoad: async () => {
     const session = await authClient.getSession();
 
     if (!session.data) {
@@ -31,9 +30,9 @@ export const Route = createFileRoute("/_student")({
     }
 
     /*
-      Un fallo de red no puede dejar al alumno encerrado fuera de su pasaporte: si no se
-      puede comprobar, se le deja pasar y se vuelve a intentar en la siguiente navegación.
-      Solo el 401 es concluyente y manda a /login.
+      Un fallo de red no puede dejar al alumno encerrado fuera de su cuenta: si no se puede
+      comprobar, se le deja pasar y se vuelve a intentar en la siguiente navegación. Solo
+      el 401 es concluyente y manda a /login.
     */
     let mustSetPin = false;
     try {
@@ -44,20 +43,23 @@ export const Route = createFileRoute("/_student")({
       }
     }
 
-    const isOnSetPin = location.pathname === SET_PIN_PATH;
-
-    if (mustSetPin && !isOnSetPin) {
-      throw redirect({ to: SET_PIN_PATH });
-    }
-
-    if (!mustSetPin && isOnSetPin) {
-      throw redirect({ to: PASSPORT_PATH });
-    }
-
     return { user: { ...session.data.user, role }, mustSetPin };
   },
 });
 
 function StudentLayout() {
-  return <Outlet />;
+  const { mustSetPin } = Route.useRouteContext();
+  /* Estado propio para cerrar la ventana al crear el PIN sin recargar la ruta. */
+  const [needsPin, setNeedsPin] = useState(mustSetPin);
+
+  return (
+    <>
+      {/*
+        La `key` fuerza el remontaje al crear el PIN: el carnet se pidió con el código
+        todavía oculto y hay que volver a pedirlo ya con la cuenta protegida.
+      */}
+      <Outlet key={needsPin ? "sin-pin" : "con-pin"} />
+      <PinDialog open={needsPin} mode="create" onDone={() => setNeedsPin(false)} />
+    </>
+  );
 }

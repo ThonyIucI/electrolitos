@@ -8,12 +8,14 @@ import {
   DropdownMenuTrigger,
 } from "@electrolitos/ui/components/dropdown-menu";
 import { cn } from "@electrolitos/ui/lib/utils";
-import { Check, Copy, Phone } from "lucide-react";
+import { Check, Copy, MoreVertical, Phone, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import ConfirmDialog from "@/common/components/confirm-dialog";
 import HouseBadge from "@/common/components/house-badge";
 import { houseColorClasses } from "@/common/constants/house-colors";
+import { buildInviteMessage } from "@/modules/enrollments/utils/invite-message";
 
 const COPY_FEEDBACK_MS = 1500;
 
@@ -21,24 +23,29 @@ interface IEnrollmentCardProps {
   enrollment: IEnrollmentResource;
   houses: IHouseResource[];
   onAssignHouse: (enrollmentId: string, houseId: string | null) => void;
+  onRegenerateCode: (enrollmentId: string) => void;
 }
 
 export default function EnrollmentCard({
   enrollment,
   houses,
   onAssignHouse,
+  onRegenerateCode,
 }: IEnrollmentCardProps) {
   const [hasCopied, setHasCopied] = useState(false);
+  const [isConfirmingCode, setIsConfirmingCode] = useState(false);
   const { student, house } = enrollment;
   const initials = `${student.firstName.charAt(0)}${student.lastName.charAt(0)}`.toUpperCase();
 
-  const copyAccessCode = async () => {
+  /* Se copia el mensaje entero, no solo el código: va directo a WhatsApp sin redactar nada. */
+  const copyInviteMessage = async () => {
     try {
-      await navigator.clipboard.writeText(enrollment.accessCode);
+      await navigator.clipboard.writeText(buildInviteMessage(student, enrollment.accessCode));
       setHasCopied(true);
       setTimeout(() => setHasCopied(false), COPY_FEEDBACK_MS);
+      toast.success(`Mensaje de ${student.firstName} copiado`);
     } catch {
-      toast.error("No se pudo copiar. Anótalo a mano.");
+      toast.error("No se pudo copiar. Anota el código a mano.");
     }
   };
 
@@ -61,8 +68,8 @@ export default function EnrollmentCard({
           <HouseBadge house={house} />
           <button
             type="button"
-            onClick={copyAccessCode}
-            aria-label={`Copiar el código de ${student.firstName}`}
+            onClick={copyInviteMessage}
+            aria-label={`Copiar el mensaje de WhatsApp para ${student.firstName}`}
             className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 font-mono text-sm font-bold tracking-wide text-foreground"
           >
             {formatAccessCode(enrollment.accessCode)}
@@ -108,6 +115,33 @@ export default function EnrollmentCard({
           </DropdownMenuContent>
         </DropdownMenu>
       )}
+
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={<Button variant="ghost" size="icon-sm" aria-label={`Más opciones de ${student.firstName}`} />}
+        >
+          <MoreVertical />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => setIsConfirmingCode(true)}>
+            <RefreshCw className="size-4" />
+            Generar código nuevo
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <ConfirmDialog
+        open={isConfirmingCode}
+        title={`¿Generar un código nuevo para ${student.firstName}?`}
+        description="El código actual deja de funcionar y se le borra el PIN. Su progreso no se toca: vuelve a entrar con el código nuevo, crea otro PIN y encuentra todo igual. Acuérdate de enviarle el código nuevo."
+        confirmLabel="Generar código"
+        variant="destructive"
+        onConfirm={() => {
+          setIsConfirmingCode(false);
+          onRegenerateCode(enrollment.id);
+        }}
+        onCancel={() => setIsConfirmingCode(false)}
+      />
     </li>
   );
 }

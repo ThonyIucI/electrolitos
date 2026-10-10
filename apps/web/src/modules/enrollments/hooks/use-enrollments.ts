@@ -5,6 +5,7 @@ import { useRequest } from "@/common/hooks/use-request";
 import {
   enrollNewStudentRequest,
   listEnrollmentsRequest,
+  regenerateAccessCodeRequest,
   updateEnrollmentRequest,
   type ICreateStudentPayload,
 } from "@/modules/enrollments/services/enrollment.service";
@@ -54,11 +55,24 @@ export const useEnrollments = () => {
     }
   };
 
+  const regenerateCode = async (enrollmentId: string) => {
+    try {
+      const updated = await regenerateAccessCodeRequest(enrollmentId);
+      request.setData((previous) => upsert(previous ?? [], updated));
+      toast.success(`Código nuevo para ${updated.student.firstName}. Cópialo y envíaselo.`);
+      return updated;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo generar el código.");
+      return null;
+    }
+  };
+
   return {
     enrollments: request.data ?? [],
     loading: request.loading,
     handler,
     enroll,
     assignHouse,
+    regenerateCode,
   };
 };

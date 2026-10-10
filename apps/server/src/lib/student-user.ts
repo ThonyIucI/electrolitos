@@ -1,9 +1,11 @@
 import type { TAuth } from "@electrolitos/auth";
 import { createDb } from "@electrolitos/db";
-import { user } from "@electrolitos/db/schema/auth";
-import { students } from "@electrolitos/db/schema/students";
+import { session, user } from "@electrolitos/db/schema/auth";
+import { enrollments, students } from "@electrolitos/db/schema/students";
 import { EUserRole } from "@electrolitos/shared/roles";
 import { eq } from "drizzle-orm";
+
+import { generateAccessCode } from "./access-code";
 
 /**
  * better-auth exige un correo único por usuario y el alumno no tiene uno. Se arma a
@@ -17,7 +19,7 @@ export const studentLoginEmail = (accessCode: string): string =>
 
 /**
  * Crea el usuario de un alumno. La contraseña inicial es su propio código de acceso: el
- * chico entra con la tarjeta y la app lo obliga a elegir un PIN antes de mostrarle nada,
+ * chico entra con ese código y la app lo obliga a elegir un PIN antes de mostrarle nada,
  * momento en el que el código deja de servir como contraseña.
  */
 export const createStudentUser = async (
@@ -48,9 +50,31 @@ export const createStudentUser = async (
 };
 
 /**
+ * El usuario del alumno, creándolo solo si de verdad falta.
+ *
+ * No alcanza con mirar `students.user_id`: puede estar en null y existir igual el usuario,
+ * si la inscripción se cortó justo entre crear la cuenta y enlazarla. Como el username es
+ * el código y el código es único, un usuario con ese username **es** este alumno, así que
+ * se reutiliza en vez de chocar contra el correo único.
+ */
+export const ensureStudentUser = async (
+  auth: TAuth,
+  { name, accessCode }: { name: string; accessCode: string },
+): Promise<string> => {
+  const db = createDb();
+  const existing = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(eq(user.username, accessCode.toLowerCase()))
+    .get();
+
+  return existing ? existing.id : createStudentUser(auth, { name, accessCode });
+};
+
+/**
  * Forma del contexto interno de better-auth que se usa para reescribir la contraseña sin
  * conocer la anterior. **Es API interna**: si una actualización de better-auth rompe el
- * restablecimiento de PIN, el cambio está acá y en ningún otro sitio.
+ * restablecimiento de credenciales, el cambio está acá y en ningún otro sitio.
  */
 interface IAuthPasswordContext {
   password: { hash: (password: string) => Promise<string> };
@@ -70,15 +94,50 @@ export const overwriteUserPassword = async (
 };
 
 /**
- * Devuelve al alumno al estado de recién inscrito: su contraseña vuelve a ser el código
- * de la tarjeta y la app le pedirá elegir un PIN nuevo en el siguiente ingreso.
+ * Le da al alumno un código nuevo y borra su PIN: vuelve al estado de recién inscrito.
+ *
+ * Se cambia el código entero, no solo el PIN, porque el motivo de fondo suele ser que la
+ * credencial anterior se perdió o anduvo circulando. El código viejo queda muerto en el
+ * acto. **Nada de su contenido se toca**: la inscripción, la casa, la asistencia y el XP
+ * cuelgan de `enrollment_id`, no del código, así que el chico vuelve a entrar y encuentra
+ * todo igual.
+ *
+ * Devuelve el código nuevo para que el profesor pueda enviárselo de inmediato.
  */
-export const resetStudentPin = async (
+export const regenerateStudentAccess = async (
   auth: TAuth,
-  { userId, studentId, accessCode }: { userId: string; studentId: string; accessCode: string },
-): Promise<void> => {
+  { userId, studentId, enrollmentId }: { userId: string; studentId: string; enrollmentId: string },
+): Promise<string> => {
+  const accessCode = await generateAccessCode();
+  const db = createDb();
+
+  await db.batch([
+    db.update(enrollments).set({ accessCode }).where(eq(enrollments.id, enrollmentId)),
+    /* El correo sintético se deriva del código: si no se actualiza, deja de cuadrar. */
+    db
+      .update(user)
+      .set({
+        username: accessCode.toLowerCase(),
+        displayUsername: accessCode.toUpperCase(),
+        email: studentLoginEmail(accessCode),
+      })
+      .where(eq(user.id, userId)),
+    db.update(students).set({ pinSetAt: null }).where(eq(students.id, studentId)),
+    /*
+      Se cierran las sesiones abiertas: si el motivo fue que la credencial circuló, dejar
+      viva una sesión en otro celular haría inútil el cambio. Se borran con Drizzle y no
+      con el adaptador interno de better-auth porque la tabla es nuestra y está tipada.
+    */
+    db.delete(session).where(eq(session.userId, userId)),
+  ]);
+
+  /*
+    La contraseña va fuera del batch porque la escribe better-auth. D1 no tiene
+    transacciones interactivas, así que si esto falla el alumno queda con el código nuevo
+    y la contraseña vieja y no puede entrar. La salida es volver a generarle un código:
+    la operación es idempotente en la práctica.
+  */
   await overwriteUserPassword(auth, userId, accessCode);
 
-  const db = createDb();
-  await db.update(students).set({ pinSetAt: null }).where(eq(students.id, studentId));
+  return accessCode;
 };

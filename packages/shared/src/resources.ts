@@ -56,6 +56,23 @@ export interface IEnrollmentResource {
   totalXp: number;
 }
 
+/**
+ * El carnet que el alumno ve en su perfil: su identidad dentro del taller.
+ *
+ * Es el único sitio donde el código viaja hacia un alumno, y solo hacia el dueño de la
+ * cuenta. Mientras no haya elegido PIN llega `null`: hasta entonces el código es su
+ * contraseña, y de todos modos no puede ver esta pantalla sin pasar antes por el PIN.
+ */
+export interface IStudentCardResource {
+  fullName: string;
+  nickname: string | null;
+  accessCode: string | null;
+  house: IHouseResource | null;
+  courseName: string;
+  /** Fecha de inscripción, ISO. Es el «miembro desde» del carnet. */
+  enrolledAt: string;
+}
+
 export interface IAttendanceResource {
   enrollmentId: string;
   sessionId: string;
