@@ -124,13 +124,11 @@ export default function StudentFormModal({
             Cancelar
           </Button>
 
-          <form.Subscribe
-            selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}
-          >
-            {({ canSubmit, isSubmitting }) => (
-              <Button type="submit" form={FORM_ID} disabled={!canSubmit || isSubmitting}>
+          <form.Subscribe selector={(state) => state.isSubmitting}>
+            {(isSubmitting) => (
+              <Button type="submit" form={FORM_ID} disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="animate-spin motion-reduce:animate-none" />}
-                {isEdit ? "Guardar cambios" : "Crear y seguir creando"}
+                {isEdit ? "Guardar" : "Inscribir"}
               </Button>
             )}
           </form.Subscribe>

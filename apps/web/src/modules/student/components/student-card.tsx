@@ -50,10 +50,14 @@ export default function StudentCard({ card }: IStudentCardProps) {
 
   return (
     <article className="overflow-hidden rounded-3xl border-2 border-border bg-card shadow-sticker-md">
+      {/*
+        Tono suave y no sólido: cada casa es uno de los cuadrantes de la chakana, y sobre
+        su propio color sólido ese cuadrante se fundía con el fondo y el logo se veía cortado.
+      */}
       <div
         className={cn(
           "flex items-center gap-2 px-5 py-3",
-          houseClasses ? houseClasses.solid : "bg-primary text-primary-foreground",
+          houseClasses ? houseClasses.soft : "bg-muted text-foreground",
         )}
       >
         <BrandMark size="sm" />

@@ -10,7 +10,7 @@
     "start": "vite",
     "check-types": "vite build && tsc --noEmit",
     "generate-pwa-assets": "pwa-assets-generator",
-    "dev": "vite dev",
+    "dev": "sh ../../scripts/free-port.sh 3008 && vite dev",
     "dev:bare": "vite dev"
   },
   "dependencies": {

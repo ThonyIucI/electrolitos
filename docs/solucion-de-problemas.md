@@ -36,17 +36,21 @@ desarrollar y la remota antes de desplegar.
 
 ## `Address already in use (0.0.0.0:3009)`
 
-Quedó un `wrangler dev` huérfano de una corrida anterior ocupando el puerto de la API.
-No es un problema de configuración: los puertos son **3008 el front y 3009 la API**, y no
-hay ningún 3000 en el proyecto.
+Los puertos son **3008 el front y 3009 la API**. El error salía porque un `vite` huérfano
+(terminal cerrada sin Ctrl+C) seguía en el 3008, el vite nuevo saltaba solo al 3009 y le
+ganaba el puerto a wrangler. Ya no debería pasar:
 
-```bash
-pkill -f "wrangler dev"
-pnpm dev
-```
+- `vite.config.ts` tiene `strictPort: true`: vite nunca se mueve de puerto.
+- `pnpm dev` corre antes `scripts/free-port.sh` para el 3008 y el 3009, que cierra lo que
+  haya quedado de una sesión anterior.
 
-Si el ocupado fuera el 3008, lo mismo con `pkill -f "vite"`. Para ver quién tiene el puerto
-antes de matar nada: `ss -ltnp | grep 3009`.
+Si aun así aparece, mira quién tiene el puerto con `ss -ltnp | grep 300[89]`.
+
+## «Cerrar sesión» no hace nada (403 en `/api/auth/sign-out`)
+
+better-auth valida el origen de todo POST **que lleve cookie**. El login no lleva cookie y
+pasa; el cierre de sesión sí y se rechaza si `CORS_ORIGIN` en `apps/server/.dev.vars` no es
+`http://localhost:3008`. Corrige el archivo (ver `.dev.vars.example`) y reinicia `pnpm dev`.
 
 ## La base local aparece vacía de golpe
 

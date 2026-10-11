@@ -94,6 +94,7 @@ Paso a paso, secrets y configuración de dominio: [docs/despliegue.md](docs/desp
 
 | Documento | De qué trata |
 |---|---|
+| [docs/ui.md](docs/ui.md) | Navegación, modales y formularios: qué respetar al hacer una pantalla |
 | [docs/entornos.md](docs/entornos.md) | Local vs producción, el `database_id`, probar desde el celular |
 | [docs/talleres-y-alumnos.md](docs/talleres-y-alumnos.md) | Cohortes, inscripción, grupos |
 | [docs/ingreso-alumnos.md](docs/ingreso-alumnos.md) | Código + PIN, carnet, regenerar código |

@@ -10,10 +10,12 @@ import {
 } from "@electrolitos/ui/components/dropdown-menu";
 import { Skeleton } from "@electrolitos/ui/components/skeleton";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { IdCard, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
+import { toast } from "sonner";
 
 import { EUserRole, parseUserRole, userRoleLabels } from "@electrolitos/shared/roles";
 
+import { navItemsForRole } from "@/common/constants/routes";
 import { authClient } from "@/lib/auth-client";
 
 export default function UserMenu() {
@@ -57,12 +59,16 @@ export default function UserMenu() {
 
           <DropdownMenuSeparator />
 
-          {isStudent && (
-            <DropdownMenuItem onClick={() => navigate({ to: "/pasaporte" })}>
-              <IdCard className="size-4" />
-              Ver mi perfil
+          {/*
+            Los enlaces también acá: la portada no tiene barra de navegación propia, y sin
+            esto quien entra a leerla desde escritorio se queda sin volver a su panel.
+          */}
+          {navItemsForRole(role).map(({ to, label, icon: Icon }) => (
+            <DropdownMenuItem key={to} onClick={() => navigate({ to })}>
+              <Icon className="size-4" />
+              {isStudent ? "Ver mi perfil" : label}
             </DropdownMenuItem>
-          )}
+          ))}
 
           <DropdownMenuItem
             variant="destructive"
@@ -71,6 +77,9 @@ export default function UserMenu() {
                 fetchOptions: {
                   onSuccess: () => {
                     navigate({ to: "/" });
+                  },
+                  onError: () => {
+                    toast.error("No pudimos cerrar la sesión. Inténtalo de nuevo.");
                   },
                 },
               });

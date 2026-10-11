@@ -1,7 +1,8 @@
 #!/usr/bin/env sh
-# Libera el puerto del dev server si quedó un wrangler/workerd vivo de una sesión anterior
-# (p. ej. una terminal olvidada). Cierra el workerd y su wrangler padre, nada más.
-PORT="${1:-3009}"
+# Libera el puerto de un dev server (vite 3008, wrangler 3009) si quedó vivo de una sesión
+# anterior (p. ej. una terminal cerrada sin Ctrl+C). Cierra el proceso que escucha y, si es
+# workerd, también su wrangler padre (si no, wrangler lo relanza).
+PORT="${1:?Uso: free-port.sh <puerto>}"
 MAX_WAIT_SECONDS=5
 
 PIDS=$(lsof -t -iTCP:"$PORT" -sTCP:LISTEN 2>/dev/null)

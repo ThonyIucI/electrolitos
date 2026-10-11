@@ -89,13 +89,11 @@ export default function CourseFormModal({
             Cancelar
           </Button>
 
-          <form.Subscribe
-            selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}
-          >
-            {({ canSubmit, isSubmitting }) => (
-              <Button type="submit" form={FORM_ID} disabled={!canSubmit || isSubmitting}>
+          <form.Subscribe selector={(state) => state.isSubmitting}>
+            {(isSubmitting) => (
+              <Button type="submit" form={FORM_ID} disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="animate-spin motion-reduce:animate-none" />}
-                {isEdit ? "Guardar cambios" : "Crear el taller"}
+                {isEdit ? "Guardar" : "Crear taller"}
               </Button>
             )}
           </form.Subscribe>
@@ -134,7 +132,8 @@ export default function CourseFormModal({
           )}
         </form.Field>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        {/* Fechas en una fila, cupo y precio en otra: son pares y caben aun en celular. */}
+        <div className="grid grid-cols-2 gap-x-3 gap-y-4">
           <form.Field name="startsOn">
             {(field) => (
               <div className="space-y-2">

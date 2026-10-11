@@ -2,17 +2,15 @@ import type { IEnrollmentResource } from "@electrolitos/shared/resources";
 import { Button } from "@electrolitos/ui/components/button";
 import { Skeleton } from "@electrolitos/ui/components/skeleton";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { ArrowLeft, CalendarDays, Pencil, UserPlus, Users } from "lucide-react";
+import { ArrowLeft, UserPlus, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { courseStatusLabels } from "@electrolitos/shared/courses";
-
-import { formatShortDate } from "@/common/utils/format-date";
-import CourseFormDialog from "@/modules/enrollments/components/course-form-dialog";
+import { useBoolean } from "@/common/hooks/use-boolean";
+import CourseFormModal from "@/modules/enrollments/components/course-form-modal";
+import CourseSummary from "@/modules/enrollments/components/course-summary";
 import EnrollmentCard from "@/modules/enrollments/components/enrollment-card";
-import MoveStudentDialog from "@/modules/enrollments/components/move-student-dialog";
-import StudentForm from "@/modules/enrollments/components/student-form";
-import StudentFormDialog from "@/modules/enrollments/components/student-form-dialog";
+import MoveStudentModal from "@/modules/enrollments/components/move-student-modal";
+import StudentFormModal from "@/modules/enrollments/components/student-form-modal";
 import { useCourses } from "@/modules/enrollments/hooks/use-courses";
 import { useEnrollments } from "@/modules/enrollments/hooks/use-enrollments";
 
@@ -24,7 +22,8 @@ function CourseDetailPage() {
   const { courseId } = Route.useParams();
   const Courses = useCourses();
   const Enrollments = useEnrollments();
-  const [isEditingCourse, setIsEditingCourse] = useState(false);
+  const editingCourse = useBoolean();
+  const enrolling = useBoolean();
   const [editing, setEditing] = useState<IEnrollmentResource | undefined>();
   const [moving, setMoving] = useState<IEnrollmentResource | undefined>();
 
@@ -68,7 +67,6 @@ function CourseDetailPage() {
     );
   }
 
-  /* El conteo sale de la lista cargada, no del taller: así sube al inscribir sin recargar. */
   const enrolled = Enrollments.enrollments.length;
 
   return (
@@ -81,51 +79,19 @@ function CourseDetailPage() {
         Talleres
       </Link>
 
-      <header className="rounded-3xl border-2 border-border bg-card p-5 shadow-sticker">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="font-heading text-2xl font-extrabold break-words text-foreground">
-              {course.name}
-            </h1>
-            <p className="mt-1 text-sm font-bold text-muted-foreground uppercase">
-              {courseStatusLabels[course.status]}
-            </p>
-          </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            className="shrink-0"
-            onClick={() => setIsEditingCourse(true)}
-          >
-            <Pencil />
-            Editar
-          </Button>
-        </div>
-
-        <dl className="mt-4 space-y-2 text-base text-muted-foreground">
-          <div className="flex gap-2">
-            <CalendarDays className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-            <dd>
-              {formatShortDate(course.startsOn)} — {formatShortDate(course.endsOn)}
-            </dd>
-          </div>
-          <div className="flex gap-2">
-            <Users className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-            <dd>
-              <span className="font-bold text-foreground">{enrolled}</span> de {course.capacity}{" "}
-              inscritos · S/ {course.priceSoles.toFixed(2)}
-            </dd>
-          </div>
-        </dl>
-      </header>
+      <CourseSummary course={course} enrolled={enrolled} onEdit={editingCourse.on} />
 
       <section className="mt-6">
         <div className="mb-3 flex items-center justify-between gap-3">
           <h2 className="font-heading text-xl font-extrabold text-foreground">Alumnos</h2>
-          <Button onClick={enrolling.on}>
+          {/* En celular solo el ícono; el texto aparece cuando sobra espacio. */}
+          <Button
+            aria-label="Inscribir alumno"
+            className="max-sm:size-11 max-sm:px-0"
+            onClick={enrolling.on}
+          >
             <UserPlus />
-            Inscribir
+            <span className="max-sm:sr-only">Inscribir</span>
           </Button>
         </div>
 
@@ -143,7 +109,7 @@ function CourseDetailPage() {
               Todavía no hay nadie inscrito
             </p>
             <p className="mt-1 text-base text-muted-foreground">
-              Registra al primero con el formulario de arriba.
+              Registra al primero con el botón «Inscribir».
             </p>
           </div>
         )}
@@ -165,34 +131,41 @@ function CourseDetailPage() {
         )}
       </section>
 
-      <CourseFormDialog
-        open={isEditingCourse}
+      <CourseFormModal
+        open={editingCourse.active}
         course={course}
-        onClose={() => setIsEditingCourse(false)}
+        onClose={editingCourse.off}
         onSubmit={async (payload) => {
           const updated = await Courses.update(course.id, payload);
           if (updated) {
-            setIsEditingCourse(false);
+            editingCourse.off();
           }
         }}
       />
 
-      <StudentFormDialog
+      {/* Alta: la modal se queda abierta y se limpia, para encadenar a los 18 de corrido. */}
+      <StudentFormModal
+        open={enrolling.active}
+        houses={course.houses}
+        onClose={enrolling.off}
+        onSubmit={(student, houseId) => Enrollments.enroll(course.id, student, houseId)}
+      />
+
+      <StudentFormModal
+        /* La `key` reinicia los campos al abrir la ficha de otro chico. */
+        key={editing?.id ?? "sin-alumno"}
         open={Boolean(editing)}
         student={editing?.student}
         onClose={() => setEditing(undefined)}
         onSubmit={async (payload) => {
           if (!editing) {
-            return;
+            return null;
           }
-          const updated = await Enrollments.updateStudent(editing.id, payload);
-          if (updated) {
-            setEditing(undefined);
-          }
+          return Enrollments.updateStudent(editing.id, payload);
         }}
       />
 
-      <MoveStudentDialog
+      <MoveStudentModal
         enrollment={moving}
         courses={Courses.courses}
         onClose={() => setMoving(undefined)}

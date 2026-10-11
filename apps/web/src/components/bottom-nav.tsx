@@ -1,28 +1,39 @@
 import { cn } from "@electrolitos/ui/lib/utils";
 import { Link } from "@tanstack/react-router";
+import { motion } from "motion/react";
 
-import type { INavItem } from "@/common/constants/routes";
-
-interface IBottomNavProps {
-  items: readonly INavItem[];
-}
+import { useChromeHidden } from "@/common/hooks/use-chrome-hidden";
+import { useNavItems } from "@/common/hooks/use-nav-items";
 
 /**
  * Navegación de pulgar para móvil. Solo aparece en pantallas chicas: en escritorio los
  * mismos enlaces viven en el encabezado, así que no se duplican a la vista.
  *
+ * Va en la raíz y **no dentro del encabezado**: la portada y el login traen el suyo
+ * propio, y colgándola del encabezado el profe que entraba a la portada desde el celular
+ * se quedaba sin forma de volver al panel.
+ *
+ * Sin sesión no renderiza nada, así que un visitante no la ve. Al bajar se esconde y al
+ * subir vuelve (`useChromeHidden`), igual que el encabezado.
+ *
  * Lleva `pb-[env(safe-area-inset-bottom)]` por la barra de gestos de los celulares sin
  * botones físicos, que si no se come la fila de íconos.
  */
-export default function BottomNav({ items }: IBottomNavProps) {
+export default function BottomNav() {
+  const items = useNavItems();
+  const isHidden = useChromeHidden();
+
   if (items.length === 0) {
     return null;
   }
 
   return (
-    <nav
+    <motion.nav
       aria-label="Navegación principal"
       className="fixed inset-x-0 bottom-0 z-30 border-t-2 border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden"
+      initial={false}
+      animate={{ y: isHidden ? "100%" : 0 }}
+      transition={{ duration: 0.2, ease: isHidden ? "easeIn" : "easeOut" }}
     >
       <ul className="mx-auto flex max-w-lg items-stretch">
         {items.map(({ to, shortLabel, icon: Icon }) => (
@@ -40,6 +51,6 @@ export default function BottomNav({ items }: IBottomNavProps) {
           </li>
         ))}
       </ul>
-    </nav>
+    </motion.nav>
   );
 }

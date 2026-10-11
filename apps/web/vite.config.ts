@@ -11,6 +11,8 @@ const LOCAL_WEB_ORIGIN = `http://localhost:${WEB_PORT}`;
 export default defineConfig({
   server: {
     port: WEB_PORT,
+    // Sin esto, si el 3008 está ocupado vite salta al 3009 y le roba el puerto a wrangler.
+    strictPort: true,
     host: true, // escucha en 0.0.0.0 → accesible desde el celular por la IP de la red
     proxy: {
       // En dev el front habla con la API por el MISMO origen (/api → wrangler dev).
