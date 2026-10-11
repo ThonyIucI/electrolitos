@@ -237,4 +237,93 @@ describe("inscripciones", () => {
     expect(response.status).toBe(200);
     expect(body.data.house?.id).toBe(house.id);
   });
+
+  it("mueve al alumno a otra cohorte conservando su código y dejándolo sin casa", async () => {
+    const { course: saman } = await createCourse(cookie);
+    const ventarronesResponse = await postJson(
+      "/api/v1/courses",
+      { ...NEW_COURSE, name: "Taller de electrónica — Ventarrones" },
+      { cookie },
+    );
+    const { data: ventarrones } =
+      await ventarronesResponse.json<IEnvelope<ICourseDetailResource>>();
+
+    const created = await enrollStudent(
+      cookie,
+      saman.id,
+      { firstName: "Luz", lastName: "Quispe" },
+      saman.houses[0]!.id,
+    );
+    const { data: enrollment } = await created.json<IEnvelope<IEnrollmentResource>>();
+
+    const response = await request(`/api/v1/enrollments/${enrollment.id}`, {
+      method: "PATCH",
+      headers: { ...JSON_HEADERS, cookie },
+      body: JSON.stringify({ courseId: ventarrones.id }),
+    });
+    const body = await response.json<IEnvelope<IEnrollmentResource>>();
+
+    expect(response.status).toBe(200);
+    expect(body.data.courseId).toBe(ventarrones.id);
+    /* La casa era de Samán: al mudarse deja de existir para él. */
+    expect(body.data.house).toBeNull();
+    /* El código no cambia: no hay que volver a mandárselo por WhatsApp. */
+    expect(body.data.accessCode).toBe(enrollment.accessCode);
+  });
+
+  it("no lo mueve a un taller donde ya está inscrito", async () => {
+    const { course: saman } = await createCourse(cookie);
+    const otherResponse = await postJson(
+      "/api/v1/courses",
+      { ...NEW_COURSE, name: "Taller de electrónica — Ventarrones" },
+      { cookie },
+    );
+    const { data: ventarrones } = await otherResponse.json<IEnvelope<ICourseDetailResource>>();
+
+    const created = await enrollStudent(cookie, saman.id, {
+      firstName: "Luz",
+      lastName: "Quispe",
+    });
+    const { data: enrollment } = await created.json<IEnvelope<IEnrollmentResource>>();
+
+    /* El mismo alumno, ya inscrito también en la otra cohorte. */
+    await postJson(
+      `/api/v1/courses/${ventarrones.id}/enrollments`,
+      { studentId: enrollment.student.id },
+      { cookie },
+    );
+
+    const response = await request(`/api/v1/enrollments/${enrollment.id}`, {
+      method: "PATCH",
+      headers: { ...JSON_HEADERS, cookie },
+      body: JSON.stringify({ courseId: ventarrones.id }),
+    });
+    const body = await response.json<IEnvelope<null>>();
+
+    expect(response.status).toBe(409);
+    expect(body.error).toContain("ya está inscrito");
+  });
+
+  it("corrige la ficha del alumno sin borrar lo que no se mandó", async () => {
+    const { course } = await createCourse(cookie);
+
+    const created = await enrollStudent(cookie, course.id, {
+      firstName: "Lus",
+      lastName: "Quispe",
+      guardianName: "Rosa Quispe",
+    });
+    const { data: enrollment } = await created.json<IEnvelope<IEnrollmentResource>>();
+
+    const response = await request(`/api/v1/enrollments/${enrollment.id}/student`, {
+      method: "PATCH",
+      headers: { ...JSON_HEADERS, cookie },
+      body: JSON.stringify({ firstName: "Luz" }),
+    });
+    const body = await response.json<IEnvelope<IEnrollmentResource>>();
+
+    expect(response.status).toBe(200);
+    expect(body.data.student.firstName).toBe("Luz");
+    expect(body.data.student.lastName).toBe("Quispe");
+    expect(body.data.student.guardianName).toBe("Rosa Quispe");
+  });
 });

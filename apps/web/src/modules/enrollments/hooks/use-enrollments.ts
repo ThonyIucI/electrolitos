@@ -7,6 +7,7 @@ import {
   listEnrollmentsRequest,
   regenerateAccessCodeRequest,
   updateEnrollmentRequest,
+  updateEnrollmentStudentRequest,
   type ICreateStudentPayload,
 } from "@/modules/enrollments/services/enrollment.service";
 
@@ -55,6 +56,34 @@ export const useEnrollments = () => {
     }
   };
 
+  /**
+   * Lo saca de esta lista: la inscripción sigue existiendo, pero ya no es de esta cohorte.
+   * Devuelve la inscripción actualizada por si quien llama quiere decir a dónde se fue.
+   */
+  const moveToCourse = async (enrollmentId: string, courseId: string) => {
+    try {
+      const moved = await updateEnrollmentRequest(enrollmentId, { courseId });
+      request.setData((previous) => (previous ?? []).filter((entry) => entry.id !== enrollmentId));
+      toast.success(`${moved.student.firstName} pasó al otro taller`);
+      return moved;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo mover al alumno.");
+      return null;
+    }
+  };
+
+  const updateStudent = async (enrollmentId: string, payload: Partial<ICreateStudentPayload>) => {
+    try {
+      const updated = await updateEnrollmentStudentRequest(enrollmentId, payload);
+      request.setData((previous) => upsert(previous ?? [], updated));
+      toast.success("Datos guardados");
+      return updated;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudieron guardar los datos.");
+      return null;
+    }
+  };
+
   const regenerateCode = async (enrollmentId: string) => {
     try {
       const updated = await regenerateAccessCodeRequest(enrollmentId);
@@ -73,6 +102,8 @@ export const useEnrollments = () => {
     handler,
     enroll,
     assignHouse,
+    moveToCourse,
+    updateStudent,
     regenerateCode,
   };
 };

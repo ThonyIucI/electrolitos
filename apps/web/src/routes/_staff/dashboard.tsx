@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { GraduationCap, Users } from "lucide-react";
+import { GraduationCap } from "lucide-react";
 
 import { userRoleLabels } from "@electrolitos/shared/roles";
 
@@ -12,13 +12,7 @@ const SHORTCUTS = [
     to: "/cursos",
     icon: GraduationCap,
     title: "Talleres",
-    detail: "Crea cohortes, cámbiales el nombre, las fechas y el cupo",
-  },
-  {
-    to: "/alumnos",
-    icon: Users,
-    title: "Alumnos",
-    detail: "Inscribe a los chicos, asígnales su casa y envíales su código",
+    detail: "Una cohorte por sede. Entra a una para inscribir a sus alumnos",
   },
 ] as const;
 

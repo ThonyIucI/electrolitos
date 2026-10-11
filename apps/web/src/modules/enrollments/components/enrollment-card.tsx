@@ -8,11 +8,11 @@ import {
   DropdownMenuTrigger,
 } from "@electrolitos/ui/components/dropdown-menu";
 import { cn } from "@electrolitos/ui/lib/utils";
-import { Check, Copy, MoreVertical, Phone, RefreshCw } from "lucide-react";
+import { ArrowRightLeft, Check, Copy, MoreVertical, Pencil, Phone, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import ConfirmDialog from "@/common/components/confirm-dialog";
+import ConfirmModal from "@/common/components/confirm-modal";
 import HouseBadge from "@/common/components/house-badge";
 import { houseColorClasses } from "@/common/constants/house-colors";
 import { buildInviteMessage } from "@/modules/enrollments/utils/invite-message";
@@ -23,6 +23,8 @@ interface IEnrollmentCardProps {
   enrollment: IEnrollmentResource;
   houses: IHouseResource[];
   onAssignHouse: (enrollmentId: string, houseId: string | null) => void;
+  onEdit: (enrollment: IEnrollmentResource) => void;
+  onMove: (enrollment: IEnrollmentResource) => void;
   onRegenerateCode: (enrollmentId: string) => void;
 }
 
@@ -30,6 +32,8 @@ export default function EnrollmentCard({
   enrollment,
   houses,
   onAssignHouse,
+  onEdit,
+  onMove,
   onRegenerateCode,
 }: IEnrollmentCardProps) {
   const [hasCopied, setHasCopied] = useState(false);
@@ -123,6 +127,14 @@ export default function EnrollmentCard({
           <MoreVertical />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => onEdit(enrollment)}>
+            <Pencil className="size-4" />
+            Editar datos
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onMove(enrollment)}>
+            <ArrowRightLeft className="size-4" />
+            Mover a otro taller
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setIsConfirmingCode(true)}>
             <RefreshCw className="size-4" />
             Generar código nuevo
@@ -130,7 +142,7 @@ export default function EnrollmentCard({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <ConfirmDialog
+      <ConfirmModal
         open={isConfirmingCode}
         title={`¿Generar un código nuevo para ${student.firstName}?`}
         description="El código actual deja de funcionar y se le borra el PIN. Su progreso no se toca: vuelve a entrar con el código nuevo, crea otro PIN y encuentra todo igual. Acuérdate de enviarle el código nuevo."

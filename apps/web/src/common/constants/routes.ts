@@ -1,4 +1,4 @@
-import { GraduationCap, IdCard, LayoutDashboard, Users } from "lucide-react";
+import { GraduationCap, IdCard, LayoutDashboard } from "lucide-react";
 import type { ComponentType } from "react";
 
 import { EUserRole, type TUserRole } from "@electrolitos/shared/roles";
@@ -7,7 +7,7 @@ import { EUserRole, type TUserRole } from "@electrolitos/shared/roles";
  * Las rutas se listan como literales y no como `string` porque el `to` de TanStack Router
  * está tipado: un enlace a una ruta inexistente tiene que romper el build, no la página.
  */
-export type TNavPath = "/dashboard" | "/cursos" | "/alumnos" | "/pasaporte";
+export type TNavPath = "/dashboard" | "/cursos" | "/pasaporte";
 
 export interface INavItem {
   to: TNavPath;
@@ -17,10 +17,10 @@ export interface INavItem {
   icon: ComponentType<{ className?: string }>;
 }
 
+/* Los alumnos no tienen entrada propia: viven dentro de su cohorte, en «Talleres». */
 const STAFF_NAV: readonly INavItem[] = [
   { to: "/dashboard", label: "Panel", shortLabel: "Panel", icon: LayoutDashboard },
   { to: "/cursos", label: "Talleres", shortLabel: "Talleres", icon: GraduationCap },
-  { to: "/alumnos", label: "Alumnos", shortLabel: "Alumnos", icon: Users },
 ];
 
 const STUDENT_NAV: readonly INavItem[] = [
@@ -28,7 +28,7 @@ const STUDENT_NAV: readonly INavItem[] = [
 ];
 
 /**
- * Los enlaces que le tocan a cada rol. Un alumno **nunca** debe ver «Panel» ni «Alumnos»:
+ * Los enlaces que le tocan a cada rol. Un alumno **nunca** debe ver «Panel» ni «Talleres»:
  * no son suyos, y aunque el servidor los rechace, mostrarlos es ofrecerle una puerta que
  * se le va a cerrar en la cara.
  */

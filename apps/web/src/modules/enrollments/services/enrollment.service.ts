@@ -1,4 +1,5 @@
 import type { TCourseStatus } from "@electrolitos/shared/courses";
+import type { TEnrollmentStatus } from "@electrolitos/shared/enrollments";
 import type {
   ICourseDetailResource,
   IEnrollmentResource,
@@ -59,11 +60,28 @@ export const regenerateAccessCodeRequest = (enrollmentId: string) =>
     method: "POST",
   });
 
+export interface IUpdateEnrollmentPayload {
+  houseId?: string | null;
+  status?: TEnrollmentStatus;
+  /** Mueve al alumno a otra cohorte conservando su código y su PIN. */
+  courseId?: string;
+}
+
 export const updateEnrollmentRequest = (
   enrollmentId: string,
-  payload: { houseId?: string | null },
+  payload: IUpdateEnrollmentPayload,
 ) =>
   apiRequest<IEnrollmentResource>(`/enrollments/${enrollmentId}`, {
+    method: "PATCH",
+    body: payload,
+  });
+
+/** Corrige la ficha del alumno. Devuelve la inscripción ya actualizada. */
+export const updateEnrollmentStudentRequest = (
+  enrollmentId: string,
+  payload: Partial<ICreateStudentPayload>,
+) =>
+  apiRequest<IEnrollmentResource>(`/enrollments/${enrollmentId}/student`, {
     method: "PATCH",
     body: payload,
   });

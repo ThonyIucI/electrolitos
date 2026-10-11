@@ -1,4 +1,5 @@
 import { createDb } from "@electrolitos/db";
+import { user } from "@electrolitos/db/schema/auth";
 import { courses } from "@electrolitos/db/schema/courses";
 import { houses } from "@electrolitos/db/schema/houses";
 import { enrollments, students } from "@electrolitos/db/schema/students";
@@ -11,7 +12,7 @@ import { z } from "zod";
 
 import { generateAccessCode } from "../lib/access-code";
 import type { TAppEnv } from "../lib/app-env";
-import { badRequest, notFound } from "../lib/errors";
+import { badRequest, conflict, notFound } from "../lib/errors";
 import { newId } from "../lib/ids";
 import { ok } from "../lib/response";
 import { toEnrollmentResource } from "../lib/serializers";
@@ -22,6 +23,7 @@ export const ENROLLMENT_ROUTES = {
   LIST: "/courses/:courseId/enrollments",
   CREATE: "/courses/:courseId/enrollments",
   UPDATE: "/enrollments/:enrollmentId",
+  UPDATE_STUDENT: "/enrollments/:enrollmentId/student",
   REGENERATE_CODE: "/enrollments/:enrollmentId/regenerate-code",
 } as const;
 
@@ -73,7 +75,12 @@ const createEnrollmentSchema = z.union([
 const updateEnrollmentSchema = z.object({
   houseId: z.string().nullish(),
   status: z.enum(EEnrollmentStatus).optional(),
+  /** Mover al alumno a otra cohorte: cambió de sede o de horario. */
+  courseId: z.string().min(1).optional(),
 });
+
+/** Corregir la ficha del alumno. Todo opcional: se manda solo lo que cambió. */
+const updateStudentSchema = studentInputSchema.partial();
 
 /** El curso debe existir y no estar borrado. */
 const findCourseOrFail = async (courseId: string) => {
@@ -233,7 +240,12 @@ export const enrollmentRoutes = new Hono<TAppEnv>()
     },
   )
 
-  /** Cambia la casa o el estado de una inscripción. */
+  /**
+   * Cambia la casa, el estado, o mueve al alumno a otra cohorte.
+   *
+   * El traslado conserva el código de acceso y el PIN: el chico que pasa de Samán a
+   * Ventarrones entra igual que siempre, no hay que volver a mandarle nada por WhatsApp.
+   */
   .patch(
     ENROLLMENT_ROUTES.UPDATE,
     requireStaff,
@@ -244,7 +256,11 @@ export const enrollmentRoutes = new Hono<TAppEnv>()
       const db = createDb();
 
       const current = await db
-        .select({ id: enrollments.id, courseId: enrollments.courseId })
+        .select({
+          id: enrollments.id,
+          courseId: enrollments.courseId,
+          studentId: enrollments.studentId,
+        })
         .from(enrollments)
         .where(eq(enrollments.id, enrollmentId))
         .get();
@@ -253,18 +269,101 @@ export const enrollmentRoutes = new Hono<TAppEnv>()
         throw notFound("No encontramos esa inscripción.");
       }
 
-      const houseId = input.houseId ?? null;
+      const courseId = input.courseId ?? current.courseId;
+      const isMoving = courseId !== current.courseId;
+
+      if (isMoving) {
+        await findCourseOrFail(courseId);
+
+        const already = await db
+          .select({ id: enrollments.id })
+          .from(enrollments)
+          .where(
+            and(eq(enrollments.courseId, courseId), eq(enrollments.studentId, current.studentId)),
+          )
+          .get();
+
+        /* El índice único (curso, alumno) lo rechazaría igual, pero con un error ilegible. */
+        if (already) {
+          throw conflict("Ese alumno ya está inscrito en el otro taller.");
+        }
+      }
+
+      /*
+        Las casas son de cada cohorte, así que al mudarse la suya deja de existir para él.
+        Se le quita salvo que en la misma llamada se le dé una del taller de destino.
+      */
+      const houseId =
+        input.houseId !== undefined ? (input.houseId ?? null) : isMoving ? null : undefined;
+
       if (houseId) {
-        await assertHouseBelongsToCourse(houseId, current.courseId);
+        await assertHouseBelongsToCourse(houseId, courseId);
       }
 
       await db
         .update(enrollments)
         .set({
-          ...(input.houseId !== undefined && { houseId }),
+          ...(houseId !== undefined && { houseId }),
           ...(input.status !== undefined && { status: input.status }),
+          ...(isMoving && { courseId }),
         })
         .where(eq(enrollments.id, enrollmentId));
+
+      return ok(context, await findEnrollmentResource(enrollmentId));
+    },
+  )
+
+  /**
+   * Corrige la ficha del alumno: un nombre mal escrito, el teléfono que faltaba, la edad.
+   *
+   * Va colgado de la inscripción y no de `/students/:id` porque es desde donde se usa,
+   * pero **el alumno es uno solo**: si está en dos cohortes, el cambio se ve en las dos.
+   */
+  .patch(
+    ENROLLMENT_ROUTES.UPDATE_STUDENT,
+    requireStaff,
+    zValidator("json", updateStudentSchema),
+    async (context) => {
+      const enrollmentId = context.req.param("enrollmentId");
+      const input = context.req.valid("json");
+      const db = createDb();
+
+      const current = await db
+        .select({
+          studentId: students.id,
+          userId: students.userId,
+          firstName: students.firstName,
+          lastName: students.lastName,
+        })
+        .from(enrollments)
+        .innerJoin(students, eq(students.id, enrollments.studentId))
+        .where(and(eq(enrollments.id, enrollmentId), isNull(students.deletedAt)))
+        .get();
+
+      if (!current) {
+        throw notFound("No encontramos esa inscripción.");
+      }
+
+      /* Sin campos no hay nada que guardar, y Drizzle revienta con un `set` vacío. */
+      if (Object.keys(input).length === 0) {
+        return ok(context, await findEnrollmentResource(enrollmentId));
+      }
+
+      await db.update(students).set(input).where(eq(students.id, current.studentId));
+
+      /* El nombre también vive en la cuenta de better-auth; si no se actualiza, el chico
+         sigue viendo el viejo en su carnet y en el saludo de su pasaporte. */
+      const hasNameChanged = input.firstName !== undefined || input.lastName !== undefined;
+
+      if (current.userId && hasNameChanged) {
+        const firstName = input.firstName ?? current.firstName;
+        const lastName = input.lastName ?? current.lastName;
+
+        await db
+          .update(user)
+          .set({ name: `${firstName} ${lastName}` })
+          .where(eq(user.id, current.userId));
+      }
 
       return ok(context, await findEnrollmentResource(enrollmentId));
     },
